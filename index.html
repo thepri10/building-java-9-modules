@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.3">
+<meta name="author" content="Pepper Lebeck-Jobe">
+<title>Building Java 9 Modules</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./coderay-asciidoctor.css">
+<link rel="stylesheet" href="https://guides.gradle.org/asciidoctor.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400,700|Source+Code+Pro:500">
+<link rel="apple-touch-icon" sizes="180x180" href="https://guides.gradle.org/icon/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="https://guides.gradle.org/icon/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="https://guides.gradle.org/icon/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="https://guides.gradle.org/icon/manifest.json">
+<link rel="mask-icon" href="https://guides.gradle.org/icon/safari-pinned-tab.svg" color="#5bbad5">
+<link rel="shortcut icon" href="https://guides.gradle.org/icon/favicon.ico">
+<meta name="apple-mobile-web-app-title" content="Building Java 9 Modules">
+<meta name="application-name" content="Building Java 9 Modules">
+<meta name="msapplication-config" content="https://guides.gradle.org/icon/browserconfig.xml">
+<meta name="theme-color" content="#ffffff">
+<script defer src="https://guides.gradle.org/js/set-time-to-complete-text.js"></script>
+<script>
+  (function(i,s,o,g,r,a,m){i["GoogleAnalyticsObject"]=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,"script","https://www.google-analytics.com/analytics.js","ga");
+  ga("create", "UA-4207603-1", "auto");
+  ga("send", "pageview");
+</script>
+</head>
+<body class="article toc2 toc-right">
+<div id="header"><div style="padding-top: 10px;"><a href="https://guides.gradle.org"><img src="http://guides.gradle.org/gradle-guides.svg" alt=""></a></div><h1>Building Java 9 Modules</h1>
+<div class="details">
+<span id="author" class="author">Pepper Lebeck-Jobe</span><br>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#what_you_ll_learn">What you&#8217;ll learn</a></li>
+<li><a href="#what_you_ll_need">What you&#8217;ll need</a></li>
+<li><a href="#understanding_the_example_project">Understanding the Example Project</a></li>
+<li><a href="#adding_code_module_info_java_code_to_your_source_code">Adding <code>module-info.java</code> to your source code</a></li>
+<li><a href="#step_2">Step 2</a></li>
+<li><a href="#step_n">Step N</a></li>
+<li><a href="#summary">Summary</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="what_you_ll_learn"><a class="anchor" href="#what_you_ll_learn"></a>What you&#8217;ll learn</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>One of the most exciting features of Java 9 is its support for developing and
+deploying modular Java software. In this guide, you&#8217;ll learn exactly what you
+need to change in your Java application to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>produce Java 9 modules for your java libraries.</p>
+</li>
+<li>
+<p>consume Java 9 modules as your dependencies.</p>
+</li>
+<li>
+<p>use Java&#8217;s <code>ServiceLoader</code> pattern with Java 9 modules.</p>
+</li>
+<li>
+<p>run an application using Java 9 modules.</p>
+</li>
+<li>
+<p>distribute your application as an optimized Java 9 runtime image.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>While Gradle version 4.1-20170608235836+0000 doesn&#8217;t have first-class support for
+Java 9 modules, this guide shows you how to experiment with them before that
+support is added.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="what_you_ll_need"><a class="anchor" href="#what_you_ll_need"></a>What you&#8217;ll need</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>About <span class="time-to-complete-text">30 minutes</span></p>
+</li>
+<li>
+<p>A text editor</p>
+</li>
+<li>
+<p>A command prompt</p>
+</li>
+<li>
+<p>The Java Development Kit (JDK), version 1.9 (build 170) or newer</p>
+</li>
+<li>
+<p>A <a href="https://gradle.org/install">Gradle distribution</a>, version 4.1-20170608235836+0000
+or newer</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="understanding_the_example_project"><a class="anchor" href="#understanding_the_example_project"></a>Understanding the Example Project</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This guide explains step-by-step how to convert an example Java application
+which doesn&#8217;t use any Java 9 features into a fully-modular Java 9 application.
+The source code for the original version of the application lives in the
+<code>src/0-original</code> directory. It is organized as multi-project Gradle build made
+up of six subprojects:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>fairy</code> - The entry point to the storyteller java application.</p>
+</li>
+<li>
+<p><code>tale</code> - A library which defines the public <code>Tale</code> interface.</p>
+</li>
+<li>
+<p><code>formula</code> - A library which makes it easy to weave a <code>Tale</code>.</p>
+</li>
+<li>
+<p><code>actors</code> - A library which represents the characters in a fairy tale.</p>
+</li>
+<li>
+<p><code>pigs</code> - A library which produces an instance of <code>Tale</code> which represents the
+story of the three little pigs.</p>
+</li>
+<li>
+<p><code>bears</code> - A library which produces an instance of <code>Tale</code> which represents the
+story of Goldilocks and the three bears.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The project hierarchy showing the dependency relationships between the six
+projects can be seen in the following illustration:</p>
+</div>
+<div id="fig-1" class="imageblock">
+<div class="content">
+<img src="images/project-graph.png" alt="Project Graph">
+</div>
+<div class="title">Figure 1: Project Graph</div>
+</div>
+<div class="paragraph">
+<p>You can clone the project and run the original program to see it&#8217;s output:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ git clone git@github.com:gradle-guides/building-java-9-modules
+$ cd building-java-9-modules/src/0-original
+$ ./gradlew run
+
+&gt; Task :fairy:run
+Once upon a time, there lived the big bad wolf, and the 3 little pigs.
+
+&lt;... elided ...&gt;
+
+Goldilocks ran out of the house at top speed to escape the 3 bears.
+And they all lived happily ever after.
+
+
+BUILD SUCCESSFUL</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Before you start modifying this project to have it use Java 9 modules, you need
+to understand two important details of how the project is structured. Namely,
+that it uses the
+<a href="https://docs.oracle.com/javase/7/docs/api/java/util/ServiceLoader.html">ServiceLoader</a>
+api to load the fairy tales at runtime, and that it contains a test class that
+shows how software modularity was broken before Java 9.</p>
+</div>
+<div class="sect2">
+<h3 id="serviceloader_usage"><a class="anchor" href="#serviceloader_usage"></a>ServiceLoader usage</h3>
+<div class="paragraph">
+<p>Java 1.6 introduced a simple mechanism for binding a set of implementations of
+some interface (the "Service") to a consuming class at runtime. Oracle&#8217;s
+<a href="https://docs.oracle.com/javase/tutorial/ext/basics/spi.html">tutorial</a> on the
+topic is a bit lengthy, but here&#8217;s how it is used in our sample application:</p>
+</div>
+<div class="listingblock">
+<div class="title">fairy/src/main/java/org/gradle/fairy/app/StoryTeller.java</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">    <span class="directive">public</span> <span class="directive">static</span> <span class="type">void</span> main(<span class="predefined-type">String</span><span class="type">[]</span> args) {
+        ServiceLoader&lt;Tale&gt; loader = ServiceLoader.load(Tale.class);
+        <span class="keyword">if</span> (!loader.iterator().hasNext()) {
+            <span class="predefined-type">System</span>.out.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">Alas, I have no tales to tell!</span><span class="delimiter">&quot;</span></span>);
+        }
+        <span class="keyword">for</span> (Tale tale : loader) {
+            tale.tell();
+        }
+    }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>ServiceLoader</code> coordinates with the JVM&#8217;s ClassLoader to find instances of
+the <code>Tale</code> class which have been specified in special files named
+<code>org.gradle.fairy.tale.Tale</code> in <code>META-INF/services</code> folders on the classpath.</p>
+</div>
+<div class="listingblock">
+<div class="title">bears/src/main/resources/META-INF/services/org.gradle.fairy.tale.Tale</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">org.gradle.fairy.tale.bears.GoldilocksAndTheThreeBears</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">pigs/src/main/resources/META-INF/services/org.gradle.fairy.tale.Tale</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">org.gradle.fairy.tale.pigs.ThreeLittlePigs</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Loading these instances at runtime gives the <code>StoryTeller</code> class the loosest
+possible coupling to the two libraries which implement the <code>Tale</code> interface.
+You can see this in the <code>dependencies</code> block of the <code>build.gradle</code> file for the
+application.</p>
+</div>
+<div class="listingblock">
+<div class="title">fairy/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">dependencies {
+    implementation project(<span class="string"><span class="delimiter">'</span><span class="content">:tale</span><span class="delimiter">'</span></span>)
+
+    runtimeOnly project(<span class="string"><span class="delimiter">'</span><span class="content">:pigs</span><span class="delimiter">'</span></span>)
+    runtimeOnly project(<span class="string"><span class="delimiter">'</span><span class="content">:bears</span><span class="delimiter">'</span></span>)
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In fact, comment out both of the lines that start, <code>runtimeOnly</code> and notice how
+the output of the <code>run</code> task changes:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ ./gradlew run
+
+&gt; Task :fairy:run
+Alas, I have no tales to tell!
+
+
+BUILD SUCCESSFUL</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="modularitytest_discussion"><a class="anchor" href="#modularitytest_discussion"></a>ModularityTest discussion</h3>
+
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="adding_code_module_info_java_code_to_your_source_code"><a class="anchor" href="#adding_code_module_info_java_code_to_your_source_code"></a>Adding <code>module-info.java</code> to your source code</h2>
+<div class="sectionbody">
+
+</div>
+</div>
+<div class="sect1">
+<h2 id="step_2"><a class="anchor" href="#step_2"></a>Step 2</h2>
+<div class="sectionbody">
+
+</div>
+</div>
+<div class="sect1">
+<h2 id="step_n"><a class="anchor" href="#step_n"></a>Step N</h2>
+<div class="sectionbody">
+
+</div>
+</div>
+<div class="sect1">
+<h2 id="summary"><a class="anchor" href="#summary"></a>Summary</h2>
+<div class="sectionbody">
+
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2017-06-12 13:29:46 UTC
+</div>
+</div>
+</body>
+</html>
