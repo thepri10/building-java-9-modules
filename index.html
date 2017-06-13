@@ -42,9 +42,10 @@
 <li><a href="#what_you_ll_learn">What you&#8217;ll learn</a></li>
 <li><a href="#what_you_ll_need">What you&#8217;ll need</a></li>
 <li><a href="#understanding_the_example_project">Understanding the Example Project</a></li>
-<li><a href="#adding_code_module_info_java_code_to_your_source_code">Adding <code>module-info.java</code> to your source code</a></li>
-<li><a href="#step_2">Step 2</a></li>
-<li><a href="#step_n">Step N</a></li>
+<li><a href="#step_1_produce_a_java_9_module_for_a_single_subproject">Step 1 - Produce a Java 9 module for a single subproject</a></li>
+<li><a href="#change_2_modify_the_code_compilejava_code_task_to_produce_a_module">Change 2 - Modify the <code>compileJava</code> task to produce a module.</a></li>
+<li><a href="#step_2_produce_java_9_modules_for_all_subprojects">Step 2 - Produce Java 9 modules for all subprojects</a></li>
+<li><a href="#step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks">Step 3 - Consume Java 9 modules in the <code>run</code> and <code>assemble</code> tasks</a></li>
 <li><a href="#summary">Summary</a></li>
 </ul>
 </div>
@@ -78,7 +79,7 @@ need to change in your Java application to:</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>While Gradle version 4.1-20170608235836+0000 doesn&#8217;t have first-class support for
+<p>While Gradle version 4.0-rc-3 doesn&#8217;t have first-class support for
 Java 9 modules, this guide shows you how to experiment with them before that
 support is added.</p>
 </div>
@@ -100,10 +101,6 @@ support is added.</p>
 </li>
 <li>
 <p>The Java Development Kit (JDK), version 1.9 (build 170) or newer</p>
-</li>
-<li>
-<p>A <a href="https://gradle.org/install">Gradle distribution</a>, version 4.1-20170608235836+0000
-or newer</p>
 </li>
 </ul>
 </div>
@@ -240,7 +237,7 @@ application.</p>
 </div>
 <div class="paragraph">
 <p>In fact, comment out both of the lines that start, <code>runtimeOnly</code> and notice how
-the output of the <code>run</code> task changes:</p>
+the output of Gradle&#8217;s <code>run</code> task changes:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -256,24 +253,549 @@ BUILD SUCCESSFUL</pre>
 </div>
 <div class="sect2">
 <h3 id="modularitytest_discussion"><a class="anchor" href="#modularitytest_discussion"></a>ModularityTest discussion</h3>
+<div class="paragraph">
+<p>In the original project, there is a test class which attempts to highlight some
+of the problems with how modularity wasn&#8217;t enforced in Java versions prior to 9.</p>
+</div>
+<div class="listingblock">
+<div class="title">formula/src/test/java/org/gradle/fairy/tale/formula/ModularityTest.java</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">    <span class="annotation">@Test</span>
+    <span class="directive">public</span> <span class="type">void</span> canReachActor() {
+        Actor actor = Imagination.createActor(<span class="string"><span class="delimiter">&quot;</span><span class="content">Sean Connery</span><span class="delimiter">&quot;</span></span>);
+        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Sean Connery</span><span class="delimiter">&quot;</span></span>, actor.toString());
+    }
 
+    <span class="annotation">@Test</span>
+    <span class="directive">public</span> <span class="type">void</span> canDynamicallyReachDefaultActor() <span class="directive">throws</span> <span class="exception">Exception</span> {
+        <span class="predefined-type">Class</span> clazz = ModularityTest
+            .class.getClassLoader()
+            .loadClass(<span class="string"><span class="delimiter">&quot;</span><span class="content">org.gradle.actors.impl.DefaultActor</span><span class="delimiter">&quot;</span></span>);
+        Actor actor = (Actor) clazz.getConstructor(<span class="predefined-type">String</span>.class)
+            .newInstance(<span class="string"><span class="delimiter">&quot;</span><span class="content">Elliot Ness</span><span class="delimiter">&quot;</span></span>);
+        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Elliot Ness</span><span class="delimiter">&quot;</span></span>, actor.toString());
+    }
+
+    <span class="annotation">@Test</span>
+    <span class="directive">public</span> <span class="type">void</span> canReachDefaultActor() {
+        Actor actor = <span class="keyword">new</span> org.gradle.actors.impl.DefaultActor(<span class="string"><span class="delimiter">&quot;</span><span class="content">Elliot Ness</span><span class="delimiter">&quot;</span></span>);
+        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Elliot Ness</span><span class="delimiter">&quot;</span></span>, actor.toString());
+    }
+
+    <span class="comment">/*
+    @Test
+    public void canReachGuavaClasses() {
+        // This line would throw a compiler error because gradle has kept the implementation dependency &quot;guava&quot;
+        // from leaking into the formula project.
+        Set&lt;String&gt; strings = com.google.common.collect.ImmutableSet.of(&quot;Hello&quot;, &quot;Goodbye&quot;);
+        assertTrue(strings.contains(&quot;Hello&quot;));
+        assertTrue(strings.contains(&quot;Goodbye&quot;));
+    }
+    */</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The four tests in this class serve different purposes:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>canReachActor</code> - Shows appropriate access by a class in the <code>formula</code>
+subproject using classes exposed as part of the <code>actors</code> project&#8217;s public
+api. This test should always pass.</p>
+</li>
+<li>
+<p><code>canDynamicallyReachDefaultActor</code> - Attempts to use reflection at runtime
+to load a class which is private to the <code>actors</code> subproject. This is possible
+before Java 9 because the classpath leaks the implementation details of all
+parts of the application to all other parts of the application.</p>
+</li>
+<li>
+<p><code>canReachDefaultActor</code> - Attempts to use a class which is private to the
+<code>actors</code> subproject directly. This will work before Java 9 because the
+private implementation details of the <code>actors</code> subproject are built in the
+same location as the public api of that subproject. So, they are available
+at compile-time and at runtime.</p>
+</li>
+<li>
+<p><code>canReachGuavaClasses</code> - Attempts to use a class which is a transitive
+dependency of the <code>actors</code> subproject. However, since Gradle 3.5, these
+<code>implementation</code> dependencies are not included on the <code>compileClasspath</code> of
+the consumers of Java projects. So, the test is commented out because it
+wouldn&#8217;t compile with Gradle 3.5 and newer.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>As you progress through this guide, you&#8217;ll see that Java 9 modules tighten down
+inappropriate access to implementation details of the module, and cause tests
+like <code>canDynamicallyReachDefaultActor</code> and <code>canReachDefaultActor</code> to fail at
+runtime and not compile, respectively.</p>
+</div>
+<div class="paragraph">
+<p>You can run Gradle&#8217;s <code>check</code> task to see that the three tests pass for the
+<code>0-original</code> project (even though two of them are breaking good modular design.)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ ./gradlew check
+
+BUILD SUCCESSFUL</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can view the results of an invocation of Gradle&#8217;s <code>check</code> task at
+<a href="https://scans.gradle.com/s/l76lgbuizu4pm/tests/byProject?toggled=W1sxXSxbMSwwXSxbMSwwLDBdLFsxLDAsMCwwXV0%3D">this build scan.</a></p>
+</div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="adding_code_module_info_java_code_to_your_source_code"><a class="anchor" href="#adding_code_module_info_java_code_to_your_source_code"></a>Adding <code>module-info.java</code> to your source code</h2>
+<h2 id="step_1_produce_a_java_9_module_for_a_single_subproject"><a class="anchor" href="#step_1_produce_a_java_9_module_for_a_single_subproject"></a>Step 1 - Produce a Java 9 module for a single subproject</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If you aren&#8217;t already familiar with the Java 9 module system, you should read:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="http://openjdk.java.net/projects/jigsaw/quick-start">Module System Quick-Start Guide</a> (at least)</p>
+</li>
+<li>
+<p><a href="http://openjdk.java.net/projects/jigsaw/spec/sotms/" class="bare">http://openjdk.java.net/projects/jigsaw/spec/sotms/</a> [The State of The Module System] (for more details)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This guide assumes that you already have familiarity with the following concepts:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The module path</p>
+</li>
+<li>
+<p>Automatic modules</p>
+</li>
+<li>
+<p>The basic syntax of <code>module-info.java</code> files</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>One nice feature of the module system in Java 9, is that you can convert all
+of the libraries of your project to Java 9 modules in a bottom-up fashion.
+Since Java 9 modules can be consumed equally well from the classpath or the
+modulepath, we can convert a single leaf-node in our multi-project build to
+produce a Java 9 module, but, consume that module on the classpath when
+compiling or running projects which consume the outputs of that node.</p>
+</div>
+<div class="paragraph">
+<p>When converting a <code>java-library</code> project to produce a Java 9 module, there are
+six changes you should to make to your project.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Add a <code>module-info.java</code> describing the module.</p>
+</li>
+<li>
+<p>Modify the <code>compileJava</code> task to produce a module.</p>
+</li>
+<li>
+<p>Modify the <code>compileTestJava</code> task to patch the module.</p>
+</li>
+<li>
+<p>Modify the <code>test</code> task to consume the patched module.</p>
+</li>
+<li>
+<p>Modify the 'jar' task to correctly assemble the module jar file.</p>
+</li>
+<li>
+<p>(Optional) Add <code>Atomatic-Module-Name</code> manifest entries for all other projects.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>This guide recommends proactively adding an <code>Automatic-Module-Name</code> manifest
+entry in the <code>META-INF/MANIFEST.MF</code> file for all of the projects which make up
+your application, just so that the module names will be correct when consuming
+them as automatic modules. Doing this is described in the optional 6th change.</p>
+</div>
+<div class="paragraph">
+<p>Each of these changes is described in subsections below along with discussion
+of why the change is being made. But, you can also view the results of these
+changes by exploring the <code>src/1-single-module</code> example project in the
+repository.</p>
+</div>
+<div class="paragraph">
+<p>Our goal in making the following six changes is to have the <code>actors</code> project
+produce a Java 9 module. The first five changes need to be be made together,
+and the sixth (optional) change can be made independently.</p>
+</div>
+<div class="sect2">
+<h3 id="change_1_add_a_code_module_info_java_code_describing_the_module"><a class="anchor" href="#change_1_add_a_code_module_info_java_code_describing_the_module"></a>Change 1 - Add a <code>module-info.java</code> describing the module.</h3>
+<div class="paragraph">
+<p>Add a <code>module-info.java</code> file to the project&#8217;s <code>actors/src/main/java</code> directory.</p>
+</div>
+<div class="listingblock">
+<div class="title">actors/src/main/java/module-info.java</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.actors {
+    exports org.gradle.actors;
+    requires guava;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This file declares the <code>org.gradle.actors</code> module which exports the
+<code>org.gradle.actors</code> package (but not the <code>org.gradle.actors.impl</code> package) and
+requires the <code>guava</code> module. So far, the Guava jar files are not Java 9 modules,
+so when you require them, you have to use the automatic module name <code>guava</code>
+which the JVM calculates from the filename of the jar file which contains the
+classes. For Guava, the jar file&#8217;s name is
+<a href="http://central.maven.org/maven2/com/google/guava/guava/22.0/">guava-22.0.jar</a>.
+According to the
+<a href="http://openjdk.java.net/projects/jigsaw/spec/sotms/#automatic-modules">rules of automatic module names</a>,
+you require <code>guava</code>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="change_2_modify_the_code_compilejava_code_task_to_produce_a_module"><a class="anchor" href="#change_2_modify_the_code_compilejava_code_task_to_produce_a_module"></a>Change 2 - Modify the <code>compileJava</code> task to produce a module.</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In the <code>build.gradle</code> file for the <code>actors</code> subproject, add the following.</p>
+</div>
+<div class="listingblock">
+<div class="title">actors/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">ext.moduleName = <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.actors</span><span class="delimiter">'</span></span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+compileJava {
+    doFirst {
+        classpath = files()  <i class="conum" data-value="2"></i><b>(2)</b>
+        options.compilerArgs = [
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, configurations.compileClasspath.asPath,
+            <span class="string"><span class="delimiter">'</span><span class="content">--source-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.srcDirs).asPath,
+            <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
+        ]
+    }
+    doLast {
+        copy {
+            from <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
+            into sourceSets.main.java.outputDir
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Defines a variable for the module name, which allows you to
+reuse the same code later for other modules without having to change it.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Clears the <code>classpath</code> property</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When compiling a Java 9 module, you want to use <code>--module-path</code> instead of
+<code>--classpath</code> to read your dependencies. So, in the <code>doFirst</code> block, you are
+clearing out the <code>classpath</code> property of the task, and adding three compiler
+arguments.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>--module-path</code> is set to the value that would have been the <code>classpath</code>. This
+makes sense because the classpath already has any jars or class output
+directories of libraries you depend on.</p>
+</li>
+<li>
+<p><code>--source-path</code> tells <code>javac</code> where it should look for <code>.java</code> files which
+define the module we are building.</p>
+</li>
+<li>
+<p><code>-d</code> sets the destination for the compiled classes to be a directory named
+the same as the module we are compiling in the output directory specified for
+the <code>main</code> source set.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This last option warrants a little more explanation. Why, didn&#8217;t you just set
+the <code>destinationDir</code> property of the <code>compileJava</code> task to the new value? You
+are trying to arrange the compiled classes such that the <code>destinationDir</code> can be
+used equally well as an element on a <code>--module-path</code> or a <code>--classpath</code> when
+consuming the outputs of this task. Gradle automatically adds the
+<code>destinationDir</code> of the <code>compileJava</code> task for project dependencies to the
+<code>compileClasspath</code> of libraries that depend on a project. However, when using
+that <code>compileClasspath</code> as a <code>--module-path</code>, each element in the path is
+expected to either contain a jar file, or a directory which has module
+directories as children.  So, since you want to be able to use the
+<code>destinationDir</code> on the <code>--module-path</code>, it must contain a subdirectory named
+after the module. That&#8217;s why you explicitly override <code>-d</code> instead of setting
+the <code>destinationDir</code>.</p>
+</div>
+<div class="paragraph">
+<p>However, you <strong>also</strong> want to be able to use the <code>destinationDir</code> as an element
+in a <code>--classpath</code> argument for projects which consume your project&#8217;s outputs
+but are not yet themselves producing Java 9 modules. This is why you added the
+<code>doLast</code> block which copies the classes into the root of the <code>main</code> source set&#8217;s
+<code>java.outputDir</code> (which is the default value of <code>destinationDir</code>). This has the
+slightly unfortunate side-effect of duplicating the classes in the output
+directory. But, don&#8217;t worry, you can remove this duplication once all the
+subprojects in your project are converted to Java 9 modules.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The reason you modify <code>options.compilerArgs</code> inside the <code>doFirst</code> block
+instead of in the configuration block of the <code>compileJava</code> task is because you
+want to avoid causing the <code>comipleClasspath</code> configuration from being resolved
+during the configuration phase of the Gradle build.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="change_3_modify_the_code_compiletestjava_code_task_to_patch_the_module"><a class="anchor" href="#change_3_modify_the_code_compiletestjava_code_task_to_patch_the_module"></a>Change 3 - Modify the <code>compileTestJava</code> task to patch the module</h3>
+<div class="paragraph">
+<p>One slightly confusing aspect of the Java 9 module system is how to run unit
+tests for code which is inside a Java 9 module. The recommended way to
+accomplish this is to "patch" the module, just during testing. Patching a module
+just means adding extra classes to the packages which make up the module. In
+the case of patching a module for running tests, you are adding the test classes
+to the module in the same package.</p>
+</div>
+<div class="paragraph">
+<p>Adding the following to your <code>build.gradle</code> accomplishes this compile-time
+patching of the <code>org.gradle.actors</code> module.</p>
+</div>
+<div class="listingblock">
+<div class="title">actors/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">compileTestJava {
+    doFirst {
+        classpath = files()
+        options.compilerArgs = [
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.testCompileClasspath).asPath, <i class="conum" data-value="1"></i><b>(1)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">junit</span><span class="delimiter">&quot;</span></span>,  <i class="conum" data-value="2"></i><b>(2)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>, <i class="conum" data-value="3"></i><b>(3)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.srcDirs).asPath, <i class="conum" data-value="4"></i><b>(4)</b>
+        ]
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This is the default value for the <code>classpath</code> property used as the
+<code>--module-path</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Explicitly adds the automatic <code>junit</code> module to the observable universe of
+modules.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Declares that <code>org.gradle.actors</code> reads the <code>junit</code> module.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Adds the test source files to the <code>org.gradle.actors</code> module.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>These options cause the generated class files in the <code>test</code> source set&#8217;s
+<code>java.outputDir</code> to contain appropriate metadata for being used to patch the
+<code>org.gradle.actors</code> module. Those class files are consumed in the next change.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="change_4_modify_the_code_test_code_task_to_consume_the_patched_module"><a class="anchor" href="#change_4_modify_the_code_test_code_task_to_consume_the_patched_module"></a>Change 4 - Modify the <code>test</code> task to consume the patched module</h3>
+<div class="paragraph">
+<p>When running the tests, we have to configure the JVM that will be running the
+tests to know about our modules and how to patch the <code>org.gradle.actors</code> module
+to include the test classes.</p>
+</div>
+<div class="paragraph">
+<p>Add the following to the <code>build.gradle</code> file in the <code>actors</code> project.</p>
+</div>
+<div class="listingblock">
+<div class="title">actors/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">test {
+    doFirst {
+        classpath = files()
+        jvmArgs = [
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.testRuntimeClasspath).asPath, <i class="conum" data-value="1"></i><b>(1)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">ALL-MODULE-PATH</span><span class="delimiter">'</span></span>, <i class="conum" data-value="2"></i><b>(2)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>, <i class="conum" data-value="3"></i><b>(3)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.outputDir).asPath, <i class="conum" data-value="4"></i><b>(4)</b>
+        ]
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This is the default value for the <code>classpath</code> property at test runtime.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>You have to use the special <code>ALL-MODULE-PATH</code> because the main class of the
+JVM that is running the tests is not part of a Java 9 module. It is Gradle&#8217;s
+test runner. So, it declares no modules it needs to consume. This argument makes
+all of the modules in the module path visible.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Declares that <code>org.gradle.actors</code> reads the <code>junit</code> module.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Adds the test classes to the <code>org.gradle.actors</code> module.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>At this point, you can actually run the tests, but let&#8217;s go ahead and fix
+the jar file so we don&#8217;t forget to and publish confusing jars.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="change_5_modify_the_jar_task_to_correctly_assemble_the_module_jar_file"><a class="anchor" href="#change_5_modify_the_jar_task_to_correctly_assemble_the_module_jar_file"></a>Change 5 - Modify the 'jar' task to correctly assemble the module jar file</h3>
+<div class="paragraph">
+<p><a href="https://docs.gradle.org/4.0-rc-3/userguide/java_plugin.html#sec:jar">The Java Plugin</a> adds a <code>jar</code> task which
+bundles up the classes and resources generated from the <code>main</code> source set into
+a jar file. But,
+<a href="#change_2_modify_the_code_compilejava_code_task_to_produce_a_module">Change 2</a>
+created duplicate class files under a <code>org.gradle.actors</code> directory in the
+<code>main.java.outputDir</code>. You just need to tell the jar task to exclude those
+extra classes in the <code>build.gradle</code> file.</p>
+</div>
+<div class="listingblock">
+<div class="title">actors/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">jar {
+    exclude moduleName
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="change_6_optional_add_code_atomatic_module_name_code_manifest_entries_for_all_other_projects"><a class="anchor" href="#change_6_optional_add_code_atomatic_module_name_code_manifest_entries_for_all_other_projects"></a>Change 6 (Optional) - Add <code>Atomatic-Module-Name</code> manifest entries for all other projects</h3>
+<div class="paragraph">
+<p>For backwards compatibility, Java 9&#8217;s module system allows non-module jar files
+to appear on the module path. By default, these jar files are converted to
+automatic modules which are named based on the filename of the jar file. This
+creates a bit of complexity though. Many jar filenames have been created without
+any attempt to make the names globally unique. So, it is very likely that, when
+the developers responsible for maintaining some commonly used jar actually
+convert that jar to a Java 9 module, they&#8217;ll choose a different module name than
+the one automatically chosen for a previous non-module version of their jar.</p>
+</div>
+<div class="paragraph">
+<p>For example, you might specify <code>requires guava;</code> in a <code>module-info.java</code> file
+today, but later, the developers responsible for the project decide to name
+their module <code>com.google.guava</code>. Now anyone who has specified <code>requires guava;</code>
+or anyone who transitively depends on such a module, will have to wait for
+all of the modules they depend on to change to <code>requires com.google.guava;</code>
+before they can adopt any of those new modules, because Java 9 only allows
+exactly one module on the module path to include any specific package.</p>
+</div>
+<div class="paragraph">
+<p>The whole situation can get quite messy. This is why
+<a href="http://blog.joda.org/2017/05/java-se-9-jpms-automatic-modules.html">Stephen Colebourne argues</a>
+that we should immediately start updating all of the jars we publish to public
+repositories to (at least) specify an <code>Automatic-Module-Name</code> attribute in
+the jar&#8217;s manifest, and not to publish any artifacts to such a repository which
+contain modules which require automatic modules for which that attribute has not
+been specified.</p>
+</div>
+<div class="paragraph">
+<p>So, in each <code>build.gradle</code> file for each subproject specify a <code>moduleName</code>
+variable. For example:</p>
+</div>
+<div class="listingblock">
+<div class="title">fairy/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">ext.moduleName = <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.fairy.app</span><span class="delimiter">'</span></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Also, in the top-level <code>build.gradle</code> file inside the <code>afterEvaluate</code> block,
+tell the <code>jar</code> task to include the manifest attribute.</p>
+</div>
+<div class="listingblock">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">        jar {
+            manifest {
+                attributes(<span class="string"><span class="delimiter">'</span><span class="content">Automatic-Module-Name</span><span class="delimiter">'</span></span>: moduleName)
+            }
+        }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, it doesn&#8217;t matter what you name your jar files when you publish them to
+an artifact repository like Maven Central, you&#8217;ll be sure you get the Java 9
+module name you want.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+You&#8217;ll be getting rid of these manifest attributes in the next step, since
+you will have converted each subproject into a proper Java 9 module.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="step_1_summary"><a class="anchor" href="#step_1_summary"></a>Step 1 - Summary</h3>
+<div class="paragraph">
+<p>This first step is the most complicated. But, now, you have converted your
+first <code>java-library</code> project into a Java 9 module. All of the other subprojects
+consume that module on the classpath. So, we haven&#8217;t really addressed any of
+the modularity violations demonstrated in
+<a href="#modularitytest_discussion">ModularityTest</a>, but, we didn&#8217;t have to break
+the project to convert one of its logical architectural units into a proper
+Java 9 module. Next, you&#8217;ll centralize the gradle changes into the root
+<code>build.gradle</code> project and apply it to all of the subprojects.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step_2_produce_java_9_modules_for_all_subprojects"><a class="anchor" href="#step_2_produce_java_9_modules_for_all_subprojects"></a>Step 2 - Produce Java 9 modules for all subprojects</h2>
 <div class="sectionbody">
 
 </div>
 </div>
 <div class="sect1">
-<h2 id="step_2"><a class="anchor" href="#step_2"></a>Step 2</h2>
-<div class="sectionbody">
-
-</div>
-</div>
-<div class="sect1">
-<h2 id="step_n"><a class="anchor" href="#step_n"></a>Step N</h2>
+<h2 id="step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks"><a class="anchor" href="#step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks"></a>Step 3 - Consume Java 9 modules in the <code>run</code> and <code>assemble</code> tasks</h2>
 <div class="sectionbody">
 
 </div>
@@ -287,7 +809,7 @@ BUILD SUCCESSFUL</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-06-13 01:40:24 UTC
+Last updated 2017-06-13 07:36:05 UTC
 </div>
 </div>
 </body>
