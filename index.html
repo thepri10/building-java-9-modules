@@ -46,7 +46,6 @@
 <li><a href="#change_2_modify_the_code_compilejava_code_task_to_produce_a_module">Change 2 - Modify the <code>compileJava</code> task to produce a module.</a></li>
 <li><a href="#step_2_produce_java_9_modules_for_all_subprojects">Step 2 - Produce Java 9 modules for all subprojects</a></li>
 <li><a href="#step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks">Step 3 - Consume Java 9 modules in the <code>run</code> and <code>assemble</code> tasks</a></li>
-<li><a href="#summary">Summary</a></li>
 </ul>
 </div>
 </div>
@@ -878,7 +877,7 @@ subprojects, you should do that now. For example:</p>
 <div class="listingblock">
 <div class="title">pigs/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy"></code></pre>
+<pre class="CodeRay highlight"><code data-lang="groovy">ext.moduleName = <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.fairy.tale.pigs</span><span class="delimiter">'</span></span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -888,7 +887,13 @@ For example:</p>
 <div class="listingblock">
 <div class="title">bears/src/main/java/module-info.java</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">Unresolved directive in index.adoc - include::/home/travis/build/gradle-guides/building-java-<span class="integer">9</span>-modules/src/<span class="integer">1</span>-single-module/bears/src/main/java/module-info.java<span class="type">[]</span></code></pre>
+<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.fairy.tale.bears {
+    requires org.gradle.actors;
+    requires org.gradle.fairy.tale;
+    requires org.gradle.fairy.tale.formula;
+
+    exports org.gradle.fairy.tale.bears;
+}</code></pre>
 </div>
 </div>
 <div class="admonitionblock warning">
@@ -961,19 +966,279 @@ You&#8217;ll handle all of these in Step 3.</p>
 <div class="sect1">
 <h2 id="step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks"><a class="anchor" href="#step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks"></a>Step 3 - Consume Java 9 modules in the <code>run</code> and <code>assemble</code> tasks</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>Now that you have all of the subprojects producing Java 9 modules, it&#8217;s time to
+learn how to consume those modules when running the main class
+<code>org.gradle.fairy.app.StoryTeller</code> from the <code>fairy</code> project.</p>
+</div>
+<div class="paragraph">
+<p>There are technically two ways run the app. The first is to use Gradle&#8217;s <code>run</code>
+task which is added by
+<a href="https://docs.gradle.org/4.0-rc-3/userguide/application_plugin.html">the Application Plugin</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ ./gradlew run
 
+&gt; Task :fairy:run
+Once upon a time, there lived the big bad wolf, and the 3 little pigs.
+
+&lt;... elided ...&gt;
+
+Goldilocks ran out of the house at top speed to escape the 3 bears.
+And they all lived happily ever after.
+
+
+BUILD SUCCESSFUL</pre>
 </div>
 </div>
-<div class="sect1">
-<h2 id="summary"><a class="anchor" href="#summary"></a>Summary</h2>
-<div class="sectionbody">
+<div class="paragraph">
+<p>The other way is to create a distribution of the application using Gradle&#8217;s
+<code>assemble</code> task, then extract the distribution to some directory and run it
+from there.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ ./gradlew assemble
 
+BUILD SUCCESSFUL
+$ cp fairy/build/distributions/fair.tar /tmp
+$ cd /tmp
+$ tar xvf fairy.tar
+x fairy/
+x fairy/lib/
+x fairy/lib/fairy.jar
+x fairy/lib/pigs.jar
+x fairy/lib/bears.jar
+x fairy/lib/formula.jar
+x fairy/lib/tale.jar
+x fairy/lib/actors.jar
+x fairy/lib/guava-22.0.jar
+x fairy/lib/jsr305-1.3.9.jar
+x fairy/lib/error_prone_annotations-2.0.18.jar
+x fairy/lib/j2objc-annotations-1.1.jar
+x fairy/lib/animal-sniffer-annotations-1.14.jar
+x fairy/bin/
+x fairy/bin/fairy
+x fairy/bin/fairy.bat
+$ ./bin/fairy
+Once upon a time, there lived the big bad wolf, and the 3 little pigs.
+
+&lt;... elided ...&gt;
+
+Goldilocks ran out of the house at top speed to escape the 3 bears.
+And they all lived happily ever after.</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>By the end of Step 2, both of those mechanisms are relying on modules which
+appear on the classpath which skips the modularity features of the Java 9
+module system. In this step, you will:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Modify the <code>run</code> task to use modules.</p>
+</li>
+<li>
+<p>Modify the <code>startScript</code> task for both *nix and Windows to use modules.</p>
+</li>
+<li>
+<p>Remove the duplication of classes during Java compilation.</p>
+</li>
+<li>
+<p>Update the <code>ServiceLoader</code> mechanism to the Java 9 syntax.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Once you&#8217;ve made changes 1 and 2, both mechanisms for running the program should
+continue working, so feel free to run those commands again to confirm you have
+correctly implemented each change.</p>
+</div>
+<div class="paragraph">
+<p>For the impatient, you can see all of the changes together in the
+<code>src/3-application</code> directory in the repository.</p>
+</div>
+<div class="sect2">
+<h3 id="change_1_modify_the_code_run_code_task_to_use_modules"><a class="anchor" href="#change_1_modify_the_code_run_code_task_to_use_modules"></a>Change 1 - Modify the <code>run</code> task to use modules</h3>
+<div class="paragraph">
+<p>To get the <code>run</code> task working with your new Java 9 modules, add the following
+to the <code>build.gadle</code> file in the <code>fairy</code> project.</p>
+</div>
+<div class="listingblock">
+<div class="title">fairy/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">mainClassName = <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">/org.gradle.fairy.app.StoryTeller</span><span class="delimiter">&quot;</span></span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+run {
+    doFirst {
+        classpath = files()
+        jvmArgs = [
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.runtimeClasspath).asPath,
+            <span class="string"><span class="delimiter">'</span><span class="content">--module</span><span class="delimiter">'</span></span>, mainClassName <i class="conum" data-value="2"></i><b>(2)</b>
+        ]
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Set the <code>mainClassName</code> to include the moduleName.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Explicitly tell Java 9 to use the module.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="change_2_modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"><a class="anchor" href="#change_2_modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"></a>Change 2 - Modify the <code>startScript</code> task for both *nix and Windows to use modules</h3>
+<div class="paragraph">
+<p>The tar and zip flies created in the <code>fairy/build/distributions</code> directory
+contain <a href="https://docs.gradle.org/4.0-rc-3/userguide/application_plugin.html#sec:the_distribution">start scripts</a>
+which allow the JVM to be started in a predictable way on all supported
+operating systems.</p>
+</div>
+<div class="paragraph">
+<p>To modify those generated <code>startScripts</code>, add the following to your
+<code>fairy/build.gradle</code> file:</p>
+</div>
+<div class="listingblock">
+<div class="title">fairy/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">mainClassName = <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">/org.gradle.fairy.app.StoryTeller</span><span class="delimiter">&quot;</span></span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+run {
+    doFirst {
+        classpath = files()
+        jvmArgs = [
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.runtimeClasspath).asPath,
+            <span class="string"><span class="delimiter">'</span><span class="content">--module</span><span class="delimiter">'</span></span>, mainClassName <i class="conum" data-value="2"></i><b>(2)</b>
+        ]
+    }
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Set the module path to a platform-independent placeholder value which is
+later replaced in a platform-specific way for the *nix shell script and Windows
+<code>.bat</code> file.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="change_3_remove_the_duplication_of_classes_during_java_compilation"><a class="anchor" href="#change_3_remove_the_duplication_of_classes_during_java_compilation"></a>Change 3 - Remove the duplication of classes during Java compilation</h3>
+<div class="paragraph">
+<p>Since the whole application is now using Java 9 modules both at compile and
+runtime, we no longer need to copy the class files generated during the
+<code>compileJava</code> task into their classpath-friendly location. Nor, should we
+consume them from that location when building the jar file.</p>
+</div>
+<div class="paragraph">
+<p>You can remove the <code>doLast</code> block from the <code>compileJava</code> task so that it looks
+like this:</p>
+</div>
+<div class="listingblock">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">        compileJava {
+            doFirst {
+                classpath = files()
+                options.compilerArgs = [
+                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, configurations.compileClasspath.asPath,
+                    <span class="string"><span class="delimiter">'</span><span class="content">--source-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.srcDirs).asPath,
+                    <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
+                ]
+            }
+        }</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You must also tell the <code>jar</code> task to consume the classes from the directory
+named the same as the module in the <code>main.java.outputDir</code> and tell it to
+continue ignoring that directory in it&#8217;s default <code>copySpec</code>.</p>
+</div>
+<div class="listingblock">
+<div class="title">build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy">        jar {
+            exclude moduleName
+            with copySpec {
+                from file(<span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>)
+            }
+        }</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="change_4_update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"><a class="anchor" href="#change_4_update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"></a>Change 4 - Update the <code>ServiceLoader</code> mechanism to the Java 9 syntax</h3>
+<div class="paragraph">
+<p>The Java 9 module system introduces a better way to specify which modules
+provide implementations of a service for the <code>ServiceLoader</code> mechanism.
+First, delete the <code>resources</code> directories from both <code>bears/src/main</code> and
+<code>pigs/src/main</code> as the new mechanism doesn&#8217;t require the <code>META-INF/services</code>
+files.</p>
+</div>
+<div class="paragraph">
+<p>Then, adjust the <code>module-info.java</code> files for each of those projects.</p>
+</div>
+<div class="listingblock">
+<div class="title">bears/src/main/java/module-info.java</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.fairy.tale.bears {
+    requires org.gradle.actors;
+    requires org.gradle.fairy.tale;
+    requires org.gradle.fairy.tale.formula;
+
+    exports org.gradle.fairy.tale.bears;
+    provides org.gradle.fairy.tale.Tale
+        with org.gradle.fairy.tale.bears.GoldilocksAndTheThreeBears;
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">pigs/src/main/java/module-info.java</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.fairy.tale.pigs {
+    requires org.gradle.actors;
+    requires org.gradle.fairy.tale;
+    requires org.gradle.fairy.tale.formula;
+
+    exports org.gradle.fairy.tale.pigs;
+    provides org.gradle.fairy.tale.Tale
+            with org.gradle.fairy.tale.pigs.ThreeLittlePigs;
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Since the <code>fairy</code> project&#8217;s <code>module-info.java</code> declares that it
+<code>uses org.gradle.fairy.tale.Tale;</code>, the <code>ServiceLoader</code> instance will
+have access to any implementations provided at runtime by Java 9 modules
+which declare <code>provides org.gradle.fairy.tale.Tale</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="step_3_summary"><a class="anchor" href="#step_3_summary"></a>Step 3 - Summary</h3>
+<div class="paragraph">
+<p>At this point, your application is taking advantage of all most all the
+features of the Java 9 module system. The only thing left to do is bundle
+the application with it&#8217;s own isolated and optimized runtime environment.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-06-13 08:54:27 UTC
+Last updated 2017-06-14 02:54:52 UTC
 </div>
 </div>
 </body>
