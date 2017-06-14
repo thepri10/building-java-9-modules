@@ -46,6 +46,7 @@
 <li><a href="#change_2_modify_the_code_compilejava_code_task_to_produce_a_module">Change 2 - Modify the <code>compileJava</code> task to produce a module.</a></li>
 <li><a href="#step_2_produce_java_9_modules_for_all_subprojects">Step 2 - Produce Java 9 modules for all subprojects</a></li>
 <li><a href="#step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks">Step 3 - Consume Java 9 modules in the <code>run</code> and <code>assemble</code> tasks</a></li>
+<li><a href="#summary">Summary</a></li>
 </ul>
 </div>
 </div>
@@ -71,9 +72,6 @@ need to change in your Java application to:</p>
 </li>
 <li>
 <p>run an application using Java 9 modules.</p>
-</li>
-<li>
-<p>distribute your application as an optimized Java 9 runtime image.</p>
 </li>
 </ul>
 </div>
@@ -1225,20 +1223,25 @@ have access to any implementations provided at runtime by Java 9 modules
 which declare <code>provides org.gradle.fairy.tale.Tale</code>.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="step_3_summary"><a class="anchor" href="#step_3_summary"></a>Step 3 - Summary</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="summary"><a class="anchor" href="#summary"></a>Summary</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>At this point, your application is taking advantage of all most all the
-features of the Java 9 module system. The only thing left to do is bundle
-the application with it&#8217;s own isolated and optimized runtime environment.</p>
-</div>
+features of the Java 9 module system. This guide has shown you how to modify
+the tasks added by the regular <code>java-library</code> and <code>application</code> plugins to get
+them work on with Java 9 modules. In the future, the Gradle team will be adding
+first-class support for the module system, but you can begin experimenting
+today!</p>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-06-14 02:54:52 UTC
+Last updated 2017-06-14 07:46:27 UTC
 </div>
 </div>
 </body>
