@@ -471,18 +471,20 @@ you require <code>guava</code>.</p>
 <pre class="CodeRay highlight"><code data-lang="groovy">ext.moduleName = <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.actors</span><span class="delimiter">'</span></span> <i class="conum" data-value="1"></i><b>(1)</b>
 
 compileJava {
+    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
     doFirst {
-        classpath = files()  <i class="conum" data-value="2"></i><b>(2)</b>
         options.compilerArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, configurations.compileClasspath.asPath,
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
             <span class="string"><span class="delimiter">'</span><span class="content">--source-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.srcDirs).asPath,
-            <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
+            <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
         ]
+        classpath = files()  <i class="conum" data-value="2"></i><b>(2)</b>
+        println options.compilerArgs
     }
     doLast {
         copy {
-            from <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
-            into sourceSets.main.java.outputDir
+            from <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
+            into destinationDir
         }
     }
 }</code></pre>
@@ -583,14 +585,15 @@ patching of the <code>org.gradle.actors</code> module.</p>
 <div class="title">actors/build.gradle</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">compileTestJava {
+    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
     doFirst {
-        classpath = files()
         options.compilerArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.testCompileClasspath).asPath, <i class="conum" data-value="1"></i><b>(1)</b>
-            <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">junit</span><span class="delimiter">&quot;</span></span>,  <i class="conum" data-value="2"></i><b>(2)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath, <i class="conum" data-value="1"></i><b>(1)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">junit</span><span class="delimiter">'</span></span>,  <i class="conum" data-value="2"></i><b>(2)</b>
             <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>, <i class="conum" data-value="3"></i><b>(3)</b>
             <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.srcDirs).asPath, <i class="conum" data-value="4"></i><b>(4)</b>
         ]
+        classpath = files()
     }
 }</code></pre>
 </div>
@@ -637,14 +640,15 @@ to include the test classes.</p>
 <div class="title">actors/build.gradle</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">test {
+    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
     doFirst {
-        classpath = files()
         jvmArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.testRuntimeClasspath).asPath, <i class="conum" data-value="1"></i><b>(1)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath, <i class="conum" data-value="1"></i><b>(1)</b>
             <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">ALL-MODULE-PATH</span><span class="delimiter">'</span></span>, <i class="conum" data-value="2"></i><b>(2)</b>
             <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>, <i class="conum" data-value="3"></i><b>(3)</b>
             <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.outputDir).asPath, <i class="conum" data-value="4"></i><b>(4)</b>
         ]
+        classpath = files()
     }
 }</code></pre>
 </div>
@@ -692,6 +696,7 @@ extra classes in the <code>build.gradle</code> file.</p>
 <div class="title">actors/build.gradle</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">jar {
+    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
     exclude moduleName
 }</code></pre>
 </div>
@@ -745,6 +750,7 @@ tell the <code>jar</code> task to include the manifest attribute.</p>
 <div class="title">build.gradle</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">        jar {
+            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
             manifest {
                 attributes(<span class="string"><span class="delimiter">'</span><span class="content">Automatic-Module-Name</span><span class="delimiter">'</span></span>: moduleName)
             }
@@ -807,47 +813,51 @@ file.</p>
         }
 
         compileJava {
+            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
             doFirst {
-                classpath = files()
                 options.compilerArgs = [
-                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, configurations.compileClasspath.asPath,
+                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
                     <span class="string"><span class="delimiter">'</span><span class="content">--source-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.srcDirs).asPath,
-                    <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
+                    <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
                 ]
+                classpath = files()
             }
             doLast {
                 copy {
-                    from <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
-                    into sourceSets.main.java.outputDir
+                    from <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
+                    into destinationDir
                 }
             }
         }
 
         compileTestJava {
+            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
             doFirst {
-                classpath = files()
                 options.compilerArgs = [
-                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.testCompileClasspath).asPath,
-                    <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="content">junit</span><span class="delimiter">&quot;</span></span>,
+                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
+                    <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">junit</span><span class="delimiter">'</span></span>,
                     <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>,
                     <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.srcDirs).asPath,
                 ]
+                classpath = files()
             }
         }
 
         jar {
+            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
             exclude moduleName
         }
 
         test {
+            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
             doFirst {
-                classpath = files()
                 jvmArgs = [
-                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.testRuntimeClasspath).asPath,
+                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
                     <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">ALL-MODULE-PATH</span><span class="delimiter">'</span></span>,
                     <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>,
                     <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.outputDir).asPath,
                 ]
+                classpath = files()
             }
         }
     }
@@ -1070,12 +1080,13 @@ to the <code>build.gadle</code> file in the <code>fairy</code> project.</p>
 <pre class="CodeRay highlight"><code data-lang="groovy">mainClassName = <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">/org.gradle.fairy.app.StoryTeller</span><span class="delimiter">&quot;</span></span> <i class="conum" data-value="1"></i><b>(1)</b>
 
 run {
+    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
     doFirst {
-        classpath = files()
         jvmArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.runtimeClasspath).asPath,
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
             <span class="string"><span class="delimiter">'</span><span class="content">--module</span><span class="delimiter">'</span></span>, mainClassName <i class="conum" data-value="2"></i><b>(2)</b>
         ]
+        classpath = files()
     }
 }</code></pre>
 </div>
@@ -1111,12 +1122,13 @@ operating systems.</p>
 <pre class="CodeRay highlight"><code data-lang="groovy">mainClassName = <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">/org.gradle.fairy.app.StoryTeller</span><span class="delimiter">&quot;</span></span> <i class="conum" data-value="1"></i><b>(1)</b>
 
 run {
+    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
     doFirst {
-        classpath = files()
         jvmArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.outputDir, configurations.runtimeClasspath).asPath,
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
             <span class="string"><span class="delimiter">'</span><span class="content">--module</span><span class="delimiter">'</span></span>, mainClassName <i class="conum" data-value="2"></i><b>(2)</b>
         ]
+        classpath = files()
     }
 }</code></pre>
 </div>
@@ -1148,13 +1160,14 @@ like this:</p>
 <div class="title">build.gradle</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">        compileJava {
+            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
             doFirst {
-                classpath = files()
                 options.compilerArgs = [
-                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, configurations.compileClasspath.asPath,
+                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
                     <span class="string"><span class="delimiter">'</span><span class="content">--source-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.srcDirs).asPath,
-                    <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
+                    <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
                 ]
+                classpath = files()
             }
         }</code></pre>
 </div>
@@ -1168,6 +1181,7 @@ continue ignoring that directory in it&#8217;s default <code>copySpec</code>.</p
 <div class="title">build.gradle</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="groovy">        jar {
+            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
             exclude moduleName
             with copySpec {
                 from file(<span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>)
@@ -1241,7 +1255,7 @@ today!</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-06-14 07:46:27 UTC
+Last updated 2017-06-19 13:21:56 UTC
 </div>
 </div>
 </body>
