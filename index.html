@@ -475,11 +475,10 @@ compileJava {
     doFirst {
         options.compilerArgs = [
             <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-            <span class="string"><span class="delimiter">'</span><span class="content">--source-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.srcDirs).asPath,
             <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
         ]
+        options.sourcepath = files(sourceSets.main.java.srcDirs)
         classpath = files()  <i class="conum" data-value="2"></i><b>(2)</b>
-        println options.compilerArgs
     }
     doLast {
         copy {
@@ -817,9 +816,9 @@ file.</p>
             doFirst {
                 options.compilerArgs = [
                     <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-                    <span class="string"><span class="delimiter">'</span><span class="content">--source-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.srcDirs).asPath,
                     <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
                 ]
+                options.sourcepath = files(sourceSets.main.java.srcDirs)
                 classpath = files()
             }
             doLast {
@@ -1164,9 +1163,9 @@ like this:</p>
             doFirst {
                 options.compilerArgs = [
                     <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-                    <span class="string"><span class="delimiter">'</span><span class="content">--source-path</span><span class="delimiter">'</span></span>, files(sourceSets.main.java.srcDirs).asPath,
                     <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
                 ]
+                options.sourcepath = files(sourceSets.main.java.srcDirs)
                 classpath = files()
             }
         }</code></pre>
@@ -1255,7 +1254,7 @@ today!</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-06-19 13:21:56 UTC
+Last updated 2017-06-19 14:24:02 UTC
 </div>
 </div>
 </body>
