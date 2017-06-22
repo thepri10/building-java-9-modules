@@ -383,13 +383,13 @@ BUILD SUCCESSFUL</pre>
 <p>One nice feature of the module system in Java 9, is that you can convert all
 of the libraries of your project to Java 9 modules in a bottom-up fashion.
 Since Java 9 modules can be consumed equally well from the classpath or the
-modulepath, we can convert a single leaf-node in our multi-project build to
+module path, we can convert a single leaf-node in our multi-project build to
 produce a Java 9 module, but, consume that module on the classpath when
 compiling or running projects which consume the outputs of that node.</p>
 </div>
 <div class="paragraph">
 <p>When converting a <code>java-library</code> project to produce a Java 9 module, there are
-six changes you should to make to your project.</p>
+five changes you should to make to your project.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -406,9 +406,6 @@ six changes you should to make to your project.</p>
 <p>Modify the <code>test</code> task to consume the locally altered module.</p>
 </li>
 <li>
-<p>Modify the 'jar' task to correctly assemble the module jar file.</p>
-</li>
-<li>
 <p>(Optional) Add <code>Automatic-Module-Name</code> manifest entries for all other
 projects.</p>
 </li>
@@ -421,7 +418,7 @@ application. Providing an <code>Automatic-Module-Name</code> allows library auth
 reserve a module name for the future, without having to actually convert the
 library to a module. This ensures that consumers of the library know right now
 what the module name will be in the future. Doing this is described in the
-optional 6th change.</p>
+optional 5th change.</p>
 </div>
 <div class="paragraph">
 <p>Each of these changes is described in subsections below along with discussion
@@ -430,9 +427,9 @@ changes by exploring the <code>src/1-single-module</code> example project in the
 repository.</p>
 </div>
 <div class="paragraph">
-<p>Our goal in making the following six changes is to have the <code>actors</code> project
-produce a Java 9 module. The first five changes need to be made together, and
-the sixth (optional) change can be made independently.</p>
+<p>Our goal in making the following five changes is to have the <code>actors</code> project
+produce a Java 9 module. The first four changes need to be made together, and
+the fifth (optional) change can be made independently.</p>
 </div>
 <div class="sect2">
 <h3 id="change_1_add_a_code_module_info_java_code_describing_the_module"><a class="anchor" href="#change_1_add_a_code_module_info_java_code_describing_the_module"></a>Change 1 - Add a <code>module-info.java</code> describing the module.</h3>
@@ -479,15 +476,8 @@ compileJava {
     doFirst {
         options.compilerArgs = [
             <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-            <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
         ]
         classpath = files()  <i class="conum" data-value="2"></i><b>(2)</b>
-    }
-    doLast {
-        copy {
-            from <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
-            into destinationDir
-        }
     }
 }</code></pre>
 </div>
@@ -508,8 +498,8 @@ reuse the same code later for other modules without having to change it.</td>
 <div class="paragraph">
 <p>When compiling a Java 9 module, you want to use <code>--module-path</code> instead of
 <code>--classpath</code> to read your dependencies. So, in the <code>doFirst</code> block, you are
-clearing out the <code>classpath</code> property of the task, and adding three compiler
-arguments.</p>
+clearing out the <code>classpath</code> property of the task, and adding a compiler
+argument.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -518,50 +508,7 @@ arguments.</p>
 makes sense because the classpath already has any jars or class output
 directories of libraries you depend on.</p>
 </li>
-<li>
-<p><code>--source-path</code> tells <code>javac</code> where it should look for <code>.java</code> files which
-define the module we are building.</p>
-</li>
-<li>
-<p><code>-d</code> sets the destination for the compiled classes to be a directory named
-the same as the module we are compiling in the output directory specified for
-the <code>main</code> source set.</p>
-</li>
 </ul>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-This last option warrants a little more explanation. Why, didn&#8217;t you just
-set the <code>destinationDir</code> property of the <code>compileJava</code> task to the new value?
-You are trying to arrange the compiled classes such that the <code>destinationDir</code>
-can be used equally well as an element on a <code>--module-path</code> or a <code>--classpath</code>
-when consuming the outputs of this task. Gradle automatically adds the
-<code>destinationDir</code> of the <code>compileJava</code> task for project dependencies to the
-<code>compileClasspath</code> of libraries that depend on a project. However, when using
-that <code>compileClasspath</code> as a <code>--module-path</code>, each element in the path is
-expected to either contain a jar file, or a directory which has module
-directories as children.  So, since you want to be able to use the
-<code>destinationDir</code> on the <code>--module-path</code>, it must contain a subdirectory named
-after the module. That&#8217;s why you explicitly override <code>-d</code> instead of setting
-the <code>destinationDir</code>.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>However, you <strong>also</strong> want to be able to use the <code>destinationDir</code> as an element
-in a <code>--classpath</code> argument for projects which consume your project&#8217;s outputs
-but are not yet themselves producing Java 9 modules. This is why you added the
-<code>doLast</code> block which copies the classes into the root of the <code>main</code> source set&#8217;s
-<code>java.outputDir</code> (which is the default value of <code>destinationDir</code>). This has the
-slightly unfortunate side-effect of duplicating the classes in the output
-directory. But, don&#8217;t worry, you can remove this duplication once all the
-subprojects in your project are converted to Java 9 modules.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -579,7 +526,7 @@ during the configuration phase of the Gradle build.
 </table>
 </div>
 <div class="sect2">
-<h3 id="change_3_modify_the_code_compiletestjava_code_task_to_patch_the_module"><a class="anchor" href="#change_3_modify_the_code_compiletestjava_code_task_to_patch_the_module"></a>Change 3 - Modify the <code>compileTestJava</code> task to patch the module</h3>
+<h3 id="change_3_modify_the_code_compiletestjava_code_task_to_locally_alter_the_module"><a class="anchor" href="#change_3_modify_the_code_compiletestjava_code_task_to_locally_alter_the_module"></a>Change 3 - Modify the <code>compileTestJava</code> task to locally alter the module</h3>
 <div class="paragraph">
 <p>One slightly confusing aspect of the Java 9 module system is how to run unit
 tests for code which is inside a Java 9 module. The recommended way to
@@ -639,7 +586,7 @@ modules.</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="change_4_modify_the_code_test_code_task_to_consume_the_patched_module"><a class="anchor" href="#change_4_modify_the_code_test_code_task_to_consume_the_patched_module"></a>Change 4 - Modify the <code>test</code> task to consume the patched module</h3>
+<h3 id="change_4_modify_the_code_test_code_task_to_consume_the_locally_altered_module"><a class="anchor" href="#change_4_modify_the_code_test_code_task_to_consume_the_locally_altered_module"></a>Change 4 - Modify the <code>test</code> task to consume the locally altered module</h3>
 <div class="paragraph">
 <p>When running the tests, we have to configure the JVM that will be running the
 tests to know about our modules and how to patch the <code>org.gradle.actors</code> module
@@ -689,33 +636,11 @@ all of the modules in the module path visible.</td>
 </table>
 </div>
 <div class="paragraph">
-<p>At this point, you can actually run the tests, but let&#8217;s go ahead and fix
-the jar file so we don&#8217;t forget to and publish confusing jars.</p>
+<p>At this point, you can actually run the tests.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="change_5_modify_the_jar_task_to_correctly_assemble_the_module_jar_file"><a class="anchor" href="#change_5_modify_the_jar_task_to_correctly_assemble_the_module_jar_file"></a>Change 5 - Modify the 'jar' task to correctly assemble the module jar file</h3>
-<div class="paragraph">
-<p><a href="https://docs.gradle.org/4.1-milestone-1/userguide/java_plugin.html#sec:jar">The Java Plugin</a> adds a <code>jar</code> task which
-bundles up the classes and resources generated from the <code>main</code> source set into
-a jar file. But,
-<a href="#change_2_modify_the_code_compilejava_code_task_to_produce_a_module">Change 2</a>
-created duplicate class files under a <code>org.gradle.actors</code> directory in the
-<code>main.java.outputDir</code>. You just need to tell the jar task to exclude those
-extra classes in the <code>build.gradle</code> file.</p>
-</div>
-<div class="listingblock">
-<div class="title">actors/build.gradle</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">jar {
-    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
-    exclude moduleName
-}</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="change_6_optional_add_code_atomatic_module_name_code_manifest_entries_for_all_other_projects"><a class="anchor" href="#change_6_optional_add_code_atomatic_module_name_code_manifest_entries_for_all_other_projects"></a>Change 6 (Optional) - Add <code>Atomatic-Module-Name</code> manifest entries for all other projects</h3>
+<h3 id="change_5_optional_add_code_atomatic_module_name_code_manifest_entries_for_all_other_projects"><a class="anchor" href="#change_5_optional_add_code_atomatic_module_name_code_manifest_entries_for_all_other_projects"></a>Change 5 (Optional) - Add <code>Atomatic-Module-Name</code> manifest entries for all other projects</h3>
 <div class="paragraph">
 <p>For backwards compatibility, Java 9&#8217;s module system allows non-module jar files
 to appear on the module path. By default, these jar files are converted to
@@ -829,15 +754,8 @@ file.</p>
             doFirst {
                 options.compilerArgs = [
                     <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-                    <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
                 ]
                 classpath = files()
-            }
-            doLast {
-                copy {
-                    from <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
-                    into destinationDir
-                }
             }
         }
 
@@ -852,11 +770,6 @@ file.</p>
                 ]
                 classpath = files()
             }
-        }
-
-        jar {
-            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
-            exclude moduleName
         }
 
         test {
@@ -1063,9 +976,6 @@ module system. In this step, you will:</p>
 <p>Modify the <code>startScript</code> task for both *nix and Windows to use modules.</p>
 </li>
 <li>
-<p>Remove the duplication of classes during Java compilation.</p>
-</li>
-<li>
 <p>Update the <code>ServiceLoader</code> mechanism to the Java 9 syntax.</p>
 </li>
 </ol>
@@ -1130,16 +1040,23 @@ operating systems.</p>
 <div class="listingblock">
 <div class="title">fairy/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">mainClassName = <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">/org.gradle.fairy.app.StoryTeller</span><span class="delimiter">&quot;</span></span> <i class="conum" data-value="1"></i><b>(1)</b>
-
-run {
+<pre class="CodeRay highlight"><code data-lang="groovy">startScripts {
     inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
     doFirst {
-        jvmArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-            <span class="string"><span class="delimiter">'</span><span class="content">--module</span><span class="delimiter">'</span></span>, mainClassName <i class="conum" data-value="2"></i><b>(2)</b>
-        ]
         classpath = files()
+        defaultJvmOpts = [
+            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">APP_HOME_LIBS</span><span class="delimiter">'</span></span>,  <i class="conum" data-value="1"></i><b>(1)</b>
+            <span class="string"><span class="delimiter">'</span><span class="content">--module</span><span class="delimiter">'</span></span>, mainClassName
+        ]
+    }
+    doLast{
+        <span class="keyword">def</span> bashFile = <span class="keyword">new</span> <span class="predefined-type">File</span>(outputDir, applicationName)
+        <span class="predefined-type">String</span> bashContent = bashFile.text
+        bashFile.text = bashContent.replaceFirst(<span class="string"><span class="delimiter">'</span><span class="content">APP_HOME_LIBS</span><span class="delimiter">'</span></span>, <span class="predefined-type">Matcher</span>.quoteReplacement(<span class="string"><span class="delimiter">'</span><span class="content">$APP_HOME/lib</span><span class="delimiter">'</span></span>))
+
+        <span class="keyword">def</span> batFile = <span class="keyword">new</span> <span class="predefined-type">File</span>(outputDir, applicationName + <span class="string"><span class="delimiter">&quot;</span><span class="content">.bat</span><span class="delimiter">&quot;</span></span>)
+        <span class="predefined-type">String</span> batContent = batFile.text
+        batFile.text = batContent.replaceFirst(<span class="string"><span class="delimiter">'</span><span class="content">APP_HOME_LIBS</span><span class="delimiter">'</span></span>, <span class="predefined-type">Matcher</span>.quoteReplacement(<span class="string"><span class="delimiter">'</span><span class="content">%APP_HOME%</span><span class="char">\\</span><span class="content">lib</span><span class="delimiter">'</span></span>))
     }
 }</code></pre>
 </div>
@@ -1156,52 +1073,7 @@ later replaced in a platform-specific way for the *nix shell script and Windows
 </div>
 </div>
 <div class="sect2">
-<h3 id="change_3_remove_the_duplication_of_classes_during_java_compilation"><a class="anchor" href="#change_3_remove_the_duplication_of_classes_during_java_compilation"></a>Change 3 - Remove the duplication of classes during Java compilation</h3>
-<div class="paragraph">
-<p>Since the whole application is now using Java 9 modules both at compile and
-runtime, we no longer need to copy the class files generated during the
-<code>compileJava</code> task into their classpath-friendly location. Nor, should we
-consume them from that location when building the jar file.</p>
-</div>
-<div class="paragraph">
-<p>You can remove the <code>doLast</code> block from the <code>compileJava</code> task so that it looks
-like this:</p>
-</div>
-<div class="listingblock">
-<div class="title">build.gradle</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">        compileJava {
-            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
-            doFirst {
-                options.compilerArgs = [
-                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-                    <span class="string"><span class="delimiter">'</span><span class="content">-d</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>destinationDir</span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>
-                ]
-                classpath = files()
-            }
-        }</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>You must also tell the <code>jar</code> task to consume the classes from the directory
-named the same as the module in the <code>main.java.outputDir</code> and tell it to
-continue ignoring that directory in its default <code>copySpec</code>.</p>
-</div>
-<div class="listingblock">
-<div class="title">build.gradle</div>
-<div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">        jar {
-            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
-            exclude moduleName
-            with copySpec {
-                from file(<span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">${</span>sourceSets.main.java.outputDir<span class="inline-delimiter">}</span></span><span class="content">/</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="delimiter">&quot;</span></span>)
-            }
-        }</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="change_4_update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"><a class="anchor" href="#change_4_update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"></a>Change 4 - Update the <code>ServiceLoader</code> mechanism to the Java 9 syntax</h3>
+<h3 id="change_3_update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"><a class="anchor" href="#change_3_update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"></a>Change 3 - Update the <code>ServiceLoader</code> mechanism to the Java 9 syntax</h3>
 <div class="paragraph">
 <p>The Java 9 module system introduces a better way to specify which modules
 provide implementations of a service for the <code>ServiceLoader</code> mechanism.
@@ -1265,7 +1137,7 @@ today!</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-06-22 00:03:54 UTC
+Last updated 2017-06-22 07:28:22 UTC
 </div>
 </div>
 </body>
