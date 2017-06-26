@@ -46,6 +46,7 @@
 <li><a href="#change_2_modify_the_code_compilejava_code_task_to_produce_a_module">Change 2 - Modify the <code>compileJava</code> task to produce a module.</a></li>
 <li><a href="#step_2_produce_java_9_modules_for_all_subprojects">Step 2 - Produce Java 9 modules for all subprojects</a></li>
 <li><a href="#step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks">Step 3 - Consume Java 9 modules in the <code>run</code> and <code>assemble</code> tasks</a></li>
+<li><a href="#step_4_use_the_code_experimental_jigsaw_code_plugin_to_do_the_same_thing">Step 4 - Use the <code>experimental-jigsaw</code> plugin to do the same thing</a></li>
 <li><a href="#summary">Summary</a></li>
 </ul>
 </div>
@@ -72,6 +73,9 @@ need to change in your Java application to:</p>
 </li>
 <li>
 <p>run an application using Java 9 modules.</p>
+</li>
+<li>
+<p>use an experimental plugin to do all of this more simply.</p>
 </li>
 </ul>
 </div>
@@ -1122,6 +1126,57 @@ which declare <code>provides org.gradle.fairy.tale.Tale</code>.</p>
 </div>
 </div>
 <div class="sect1">
+<h2 id="step_4_use_the_code_experimental_jigsaw_code_plugin_to_do_the_same_thing"><a class="anchor" href="#step_4_use_the_code_experimental_jigsaw_code_plugin_to_do_the_same_thing"></a>Step 4 - Use the <code>experimental-jigsaw</code> plugin to do the same thing</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>While Gradle does not yet support building Java 9 modules as a first-class
+feature of the java plugins, we are providing a plugin you can use to experiment
+with Java 9 modules on your projects while we&#8217;re still building the first-class
+implementation.</p>
+</div>
+<div class="paragraph">
+<p>The <code>org.gradle.java.experimental-jigsaw</code> plugin is simply a convenient
+mechanism for applying all of the changes in steps 1 through 3 of this guide
+in one shot. It <strong>may</strong> work for your project, but, you should definitely
+consider it experimental and not fit for production builds.</p>
+</div>
+<div class="paragraph">
+<p>Here&#8217;s how to use the plugin:</p>
+</div>
+<div class="listingblock">
+<div class="title">actors/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy"></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Just use <a href="https://plugins.gradle.org/plugin/org.gradle.java.experimental-jigsaw">the plugin</a>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>and:</p>
+</div>
+<div class="listingblock">
+<div class="title">actors/build.gradle</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="groovy"></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Change the line that specifies the module name to use the new <code>javaMoudle.name</code> settings.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="summary"><a class="anchor" href="#summary"></a>Summary</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1137,7 +1192,7 @@ today!</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-06-23 17:25:46 UTC
+Last updated 2017-06-26 16:10:25 UTC
 </div>
 </div>
 </body>
