@@ -43,7 +43,6 @@
 <li><a href="#what_you_ll_need">What you&#8217;ll need</a></li>
 <li><a href="#understanding_the_example_project">Understanding the Example Project</a></li>
 <li><a href="#step_1_produce_a_java_9_module_for_a_single_subproject">Step 1 - Produce a Java 9 module for a single subproject</a></li>
-<li><a href="#change_2_modify_the_code_compilejava_code_task_to_produce_a_module">Change 2 - Modify the <code>compileJava</code> task to produce a module.</a></li>
 <li><a href="#step_2_produce_java_9_modules_for_all_subprojects">Step 2 - Produce Java 9 modules for all subprojects</a></li>
 <li><a href="#step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks">Step 3 - Consume Java 9 modules in the <code>run</code> and <code>assemble</code> tasks</a></li>
 <li><a href="#step_4_use_the_code_experimental_jigsaw_code_plugin_to_do_the_same_thing">Step 4 - Use the <code>experimental-jigsaw</code> plugin to do the same thing</a></li>
@@ -81,8 +80,8 @@ need to change in your Java application to:</p>
 </div>
 <div class="paragraph">
 <p>While Gradle version 4.1-milestone-1 doesn&#8217;t have first-class support for
-Java 9 modules, this guide shows you how to experiment with them before that
-support is added.</p>
+Java 9 modules yet, this guide shows you how to experiment with them before that
+support is complete.</p>
 </div>
 </div>
 </div>
@@ -152,7 +151,7 @@ projects can be seen in the following illustration:</p>
 <div class="title">Figure 1: Project Graph</div>
 </div>
 <div class="paragraph">
-<p>You can clone the project and run the original program to see it&#8217;s output:</p>
+<p>You can clone the project and run the original program to see its output:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -237,8 +236,7 @@ application.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>In fact, comment out both of the lines that start, <code>runtimeOnly</code> and notice how
-the output of Gradle&#8217;s <code>run</code> task changes:</p>
+<p>In fact, comment out both of the lines that start with <code>runtimeOnly</code> and notice how the output of Gradle&#8217;s <code>run</code> task changes:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -307,9 +305,7 @@ api. This test should always pass.</p>
 </li>
 <li>
 <p><code>canDynamicallyReachDefaultActor</code> - Attempts to use reflection at runtime
-to load a class which is private to the <code>actors</code> subproject. This is possible
-before Java 9 because the classpath leaks the implementation details of all
-parts of the application to all other parts of the application.</p>
+to load a class which is private to the <code>actors</code> subproject. This was possible before Java 9 because the classpath leaks the implementation details of all parts of the application to all other parts of the application.</p>
 </li>
 <li>
 <p><code>canReachDefaultActor</code> - Attempts to use a class which is private to the
@@ -322,7 +318,7 @@ at compile-time and at runtime.</p>
 <p><code>canReachGuavaClasses</code> - Attempts to use a class which is a transitive
 dependency of the <code>actors</code> subproject. However, since Gradle 3.5, these
 <code>implementation</code> dependencies are not included on the <code>compileClasspath</code> of
-the consumers of Java projects. So, the test is commented out because it
+the consumers of Java projects. So, this test is commented out because it
 wouldn&#8217;t compile with Gradle 3.5 and newer.</p>
 </li>
 </ol>
@@ -388,7 +384,7 @@ BUILD SUCCESSFUL</pre>
 of the libraries of your project to Java 9 modules in a bottom-up fashion.
 Since Java 9 modules can be consumed equally well from the classpath or the
 module path, we can convert a single leaf-node in our multi-project build to
-produce a Java 9 module, but, consume that module on the classpath when
+produce a Java 9 module, but use that module on the classpath when
 compiling or running projects which consume the outputs of that node.</p>
 </div>
 <div class="paragraph">
@@ -426,7 +422,7 @@ optional 5th change.</p>
 </div>
 <div class="paragraph">
 <p>Each of these changes is described in subsections below along with discussion
-of why the change is being made. But, you can also view the results of these
+of why the change is being made. You can also view the results of these
 changes by exploring the <code>src/1-single-module</code> example project in the
 repository.</p>
 </div>
@@ -435,8 +431,20 @@ repository.</p>
 produce a Java 9 module. The first four changes need to be made together, and
 the fifth (optional) change can be made independently.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+As a reminder, all builds from this point on need to run on Java 9.
+</td>
+</tr>
+</table>
+</div>
 <div class="sect2">
-<h3 id="change_1_add_a_code_module_info_java_code_describing_the_module"><a class="anchor" href="#change_1_add_a_code_module_info_java_code_describing_the_module"></a>Change 1 - Add a <code>module-info.java</code> describing the module.</h3>
+<h3 id="add_a_code_module_info_java_code_describing_the_module"><a class="anchor" href="#add_a_code_module_info_java_code_describing_the_module"></a>Add a <code>module-info.java</code> describing the module.</h3>
 <div class="paragraph">
 <p>Add a <code>module-info.java</code> file to the project&#8217;s <code>actors/src/main/java</code> directory.</p>
 </div>
@@ -452,21 +460,17 @@ the fifth (optional) change can be made independently.</p>
 <div class="paragraph">
 <p>This file declares the <code>org.gradle.actors</code> module which exports the
 <code>org.gradle.actors</code> package (but not the <code>org.gradle.actors.impl</code> package) and
-requires the <code>guava</code> module. So far, the Guava jar files are not Java 9 modules,
+requires the <code>guava</code> module. The Guava jar files are not yet Java 9 modules,
 so when you require them, you have to use the automatic module name <code>guava</code>
 which the JVM infers from the filename of the jar file which contains the
 classes. For Guava, the jar file&#8217;s name is
-<a href="http://central.maven.org/maven2/com/google/guava/guava/22.0/">guava-22.0.jar</a>.
-According to the
+<a href="http://central.maven.org/maven2/com/google/guava/guava/22.0/">guava-22.0.jar</a>, so according to the
 <a href="http://openjdk.java.net/projects/jigsaw/spec/sotms/#automatic-modules">rules of automatic module names</a>,
 you require <code>guava</code>.</p>
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="change_2_modify_the_code_compilejava_code_task_to_produce_a_module"><a class="anchor" href="#change_2_modify_the_code_compilejava_code_task_to_produce_a_module"></a>Change 2 - Modify the <code>compileJava</code> task to produce a module.</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="modify_the_code_compilejava_code_task_to_produce_a_module"><a class="anchor" href="#modify_the_code_compilejava_code_task_to_produce_a_module"></a>Modify the <code>compileJava</code> task to produce a module.</h3>
 <div class="paragraph">
 <p>In the <code>build.gradle</code> file for the <code>actors</code> subproject, add the following.</p>
 </div>
@@ -501,16 +505,15 @@ reuse the same code later for other modules without having to change it.</td>
 </div>
 <div class="paragraph">
 <p>When compiling a Java 9 module, you want to use <code>--module-path</code> instead of
-<code>--classpath</code> to read your dependencies. So, in the <code>doFirst</code> block, you are
-clearing out the <code>classpath</code> property of the task, and adding a compiler
+<code>--classpath</code> to read your dependencies. So in the <code>doFirst</code> block, you are
+clearing out the <code>classpath</code> property of the task and adding a compiler
 argument.</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
 <p><code>--module-path</code> is set to the value that would have been the <code>classpath</code>. This
-makes sense because the classpath already has any jars or class output
-directories of libraries you depend on.</p>
+makes sense because the classpath already has any jars or class output directories of libraries you depend on.</p>
 </li>
 </ul>
 </div>
@@ -523,22 +526,17 @@ directories of libraries you depend on.</p>
 <td class="content">
 The reason you modify <code>options.compilerArgs</code> inside the <code>doFirst</code> block
 instead of in the configuration block of the <code>compileJava</code> task is because you
-want to avoid causing the <code>compileClasspath</code> configuration from being resolved
-during the configuration phase of the Gradle build.
+only want resolve the <code>compileClasspath</code> configuration when executing that task.
 </td>
 </tr>
 </table>
 </div>
+</div>
 <div class="sect2">
-<h3 id="change_3_modify_the_code_compiletestjava_code_task_to_locally_alter_the_module"><a class="anchor" href="#change_3_modify_the_code_compiletestjava_code_task_to_locally_alter_the_module"></a>Change 3 - Modify the <code>compileTestJava</code> task to locally alter the module</h3>
+<h3 id="modify_the_code_compiletestjava_code_task_to_locally_alter_the_module"><a class="anchor" href="#modify_the_code_compiletestjava_code_task_to_locally_alter_the_module"></a>Modify the <code>compileTestJava</code> task to locally alter the module</h3>
 <div class="paragraph">
 <p>One slightly confusing aspect of the Java 9 module system is how to run unit
-tests for code which is inside a Java 9 module. The recommended way to
-accomplish this is to "patch" the module, just during testing. Patching a module
-just means adding extra classes to the packages which make up the module. In
-the case of patching a module for running tests, you are adding the test classes
-to the module in the same package so that those test classes have access to
-everything else which makes up the module under test.</p>
+tests for code inside a Java 9 module. The recommended way is to "patch" the module during testing. Patching a module means adding extra classes to the packages which make up the module. In the case of patching a module for running tests, you are adding the test classes to the module, using the same package so that the test classes have access to everything else in the module under test.</p>
 </div>
 <div class="paragraph">
 <p>Adding the following to your <code>build.gradle</code> accomplishes this compile-time
@@ -566,7 +564,7 @@ patching of the <code>org.gradle.actors</code> module.</p>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
 <td>This is the default value for the <code>classpath</code> property used as the
-<code>--module-path</code></td>
+<code>--module-path</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -585,15 +583,15 @@ modules.</td>
 </div>
 <div class="paragraph">
 <p>These options cause the generated class files in the <code>test</code> source set&#8217;s
-<code>java.outputDir</code> to contain appropriate metadata for being used to patch the
+<code>java.outputDir</code> to contain appropriate metadata used to patch the
 <code>org.gradle.actors</code> module. Those class files are consumed in the next change.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="change_4_modify_the_code_test_code_task_to_consume_the_locally_altered_module"><a class="anchor" href="#change_4_modify_the_code_test_code_task_to_consume_the_locally_altered_module"></a>Change 4 - Modify the <code>test</code> task to consume the locally altered module</h3>
+<h3 id="modify_the_code_test_code_task_to_consume_the_locally_altered_module"><a class="anchor" href="#modify_the_code_test_code_task_to_consume_the_locally_altered_module"></a>Modify the <code>test</code> task to consume the locally altered module</h3>
 <div class="paragraph">
 <p>When running the tests, we have to configure the JVM that will be running the
-tests to know about our modules and how to patch the <code>org.gradle.actors</code> module
+tests to know about our modules and to patch the <code>org.gradle.actors</code> module
 to include the test classes.</p>
 </div>
 <div class="paragraph">
@@ -624,9 +622,9 @@ to include the test classes.</p>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>You have to use the special <code>ALL-MODULE-PATH</code> because the main class of the
+<td>Use the special <code>ALL-MODULE-PATH</code>, because the main class of the
 JVM that is running the tests is not part of a Java 9 module. It is Gradle&#8217;s
-test runner. So, it declares no modules it needs to consume. This argument makes
+test runner, so it declares no modules it needs to consume. This argument makes
 all of the modules in the module path visible.</td>
 </tr>
 <tr>
@@ -644,33 +642,33 @@ all of the modules in the module path visible.</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="change_5_optional_add_code_automatic_module_name_code_manifest_entries_for_all_other_projects"><a class="anchor" href="#change_5_optional_add_code_automatic_module_name_code_manifest_entries_for_all_other_projects"></a>Change 5 (Optional) - Add <code>Automatic-Module-Name</code> manifest entries for all other projects</h3>
+<h3 id="optional_add_code_automatic_module_name_code_manifest_entries_for_all_other_projects"><a class="anchor" href="#optional_add_code_automatic_module_name_code_manifest_entries_for_all_other_projects"></a>(Optional) - Add <code>Automatic-Module-Name</code> manifest entries for all other projects</h3>
 <div class="paragraph">
 <p>For backwards compatibility, Java 9&#8217;s module system allows non-module jar files
 to appear on the module path. By default, these jar files are converted to
-automatic modules which are named based on the filename of the jar file. This
+automatic modules whose names are based on the filename of the jar file. This
 creates a bit of complexity though. Many jar filenames have been created without
-any attempt to make the names globally unique. So, it is very likely that, when
+any attempt to make the names globally unique. So it is very likely that, when
 the developers responsible for maintaining some commonly used jar actually
 convert that jar to a Java 9 module, they&#8217;ll choose a different module name than
 the one automatically chosen for a previous non-module version of their jar.</p>
 </div>
 <div class="paragraph">
-<p>For example, you might specify <code>requires guava;</code> in a <code>module-info.java</code> file
-today, but later, the developers responsible for the project decide to name
-their module <code>com.google.guava</code>. Now anyone who has specified <code>requires guava;</code>
+<p>For example, you might specify <code>requires guava</code> in a <code>module-info.java</code> file
+today, but later the developers responsible for the project decide to name
+their module <code>com.google.guava</code>. Now anyone who has specified <code>requires guava</code>,
 or anyone who transitively depends on such a module, will have to wait for
-all of the modules they depend on to change to <code>requires com.google.guava;</code>
+all of the modules they depend on to change to <code>requires com.google.guava</code>
 before they can adopt any of those new modules, because Java 9 only allows
-exactly one module on the module path to include any specific package.</p>
+one module on the module path to include any specific package.</p>
 </div>
 <div class="paragraph">
 <p>The whole situation can get quite messy. This is why
 <a href="http://blog.joda.org/2017/05/java-se-9-jpms-automatic-modules.html">Stephen Colebourne argues</a>
 that we should immediately start updating all of the jars we publish to public
 repositories to (at least) specify an <code>Automatic-Module-Name</code> attribute in
-the jar&#8217;s manifest, and not to publish any artifacts to such a repository which
-contain modules which require automatic modules for which that attribute has not
+the jar&#8217;s manifest, and not to publish any artifacts which
+contain modules that require automatic modules where that attribute has not
 been specified.</p>
 </div>
 <div class="paragraph">
@@ -699,8 +697,8 @@ tell the <code>jar</code> task to include the manifest attribute.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Now, it doesn&#8217;t matter what you name your jar files when you publish them to
-an artifact repository like Maven Central, you&#8217;ll be sure you get the Java 9
+<p>Now it doesn&#8217;t matter what you name your jar files when you publish them to
+an artifact repository like Maven Central; you&#8217;ll be sure you get the Java 9
 module name you want.</p>
 </div>
 <div class="admonitionblock note">
@@ -720,14 +718,14 @@ you will have converted each subproject into a proper Java 9 module.
 <div class="sect2">
 <h3 id="step_1_summary"><a class="anchor" href="#step_1_summary"></a>Step 1 - Summary</h3>
 <div class="paragraph">
-<p>This first step is the most complicated. But, now, you have converted your
+<p>This first step is the most complicated, but now you have converted your
 first <code>java-library</code> project into a Java 9 module. All of the other subprojects
-consume that module on the classpath. So, we haven&#8217;t really addressed any of
+consume that module on the classpath. So we haven&#8217;t really addressed any of
 the modularity violations demonstrated in
-<a href="#modularitytest_discussion">ModularityTest</a>, but, we didn&#8217;t have to break
+<a href="#modularitytest_discussion">ModularityTest</a>, but we didn&#8217;t have to break
 the project to convert one of its logical architectural units into a proper
-Java 9 module. Next, you&#8217;ll centralize the gradle changes into the root
-<code>build.gradle</code> project and apply it to all of the subprojects.</p>
+Java 9 module. Next you&#8217;ll centralize the gradle changes into the root
+<code>build.gradle</code> project, and apply it to all of the subprojects.</p>
 </div>
 </div>
 </div>
@@ -739,7 +737,7 @@ Java 9 module. Next, you&#8217;ll centralize the gradle changes into the root
 <p>The goal of this step is to make all of the subprojects in our Gradle build
 produce Java 9 modules, and consume their dependencies as Java 9 modules. Since
 you already have the <code>moduleName</code> variable declaration separate from the other
-changes in the <code>build.gradle</code> file in the <code>actors</code> subproject. It&#8217;s just a
+changes in the <code>build.gradle</code> file in the <code>actors</code> subproject, it&#8217;s just a
 matter of cutting everything from below the <code>moduleName</code> declaration in that
 file and pasting it into the <code>afterEvaluate</code> block in the root <code>build.gradle</code>
 file.</p>
@@ -840,15 +838,13 @@ For example:</p>
 </td>
 <td class="content">
 You also have to add these <code>module-info.java</code> files for the <code>pigs</code>,
-<code>formula</code>, <code>fairy</code>, and <code>tale</code> subprojects in addition to the <code>bears</code>
-subproject. You can see what the end results should look like in
-<code>src/2-all-modules</code>.
+<code>formula</code>, <code>fairy</code>, and <code>tale</code> subprojects. The end results should look like the code in <code>src/2-all-modules</code>.
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>That&#8217;s it, now Gradle&#8217;s <code>test</code> task will fail to compile unless you&#8217;ve
+<p>Now Gradle&#8217;s <code>test</code> task will fail to compile, unless you&#8217;ve
 commented out the <code>canReachDefaultActor</code> test. Also, the
 <code>canDynamicallyReachDefaultActor</code> test will fail at test runtime unless you
 <code>@Ignore</code> it.</p>
@@ -878,9 +874,7 @@ BUILD FAILED</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>If you do comment out <code>canReachDefaultActor</code> and <code>@Ignore</code>
-<code>canDynamicallyReachDefaultActor</code> the tests should pass, and you&#8217;ll have
-exactly the code in <code>src/2-all-modules</code></p>
+<p>If you do comment out <code>canReachDefaultActor</code> and add the <code>@Ignore</code> annotation to <code>canDynamicallyReachDefaultActor</code>, the remaining tests should pass, and you&#8217;ll have exactly the code in <code>src/2-all-modules</code></p>
 </div>
 <div class="sect2">
 <h3 id="step_2_summary"><a class="anchor" href="#step_2_summary"></a>Step 2 - Summary</h3>
@@ -967,8 +961,8 @@ And they all lived happily ever after.</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>By the end of Step 2, both of those mechanisms are relying on modules which
-appear on the classpath which skips the modularity features of the Java 9
+<p>After Step 2, both of those mechanisms rely on modules which
+appear on the classpath. That skips the modularity features of the Java 9
 module system. In this step, you will:</p>
 </div>
 <div class="olist arabic">
@@ -994,10 +988,10 @@ correctly implemented each change.</p>
 <code>src/3-application</code> directory in the repository.</p>
 </div>
 <div class="sect2">
-<h3 id="change_1_modify_the_code_run_code_task_to_use_modules"><a class="anchor" href="#change_1_modify_the_code_run_code_task_to_use_modules"></a>Change 1 - Modify the <code>run</code> task to use modules</h3>
+<h3 id="modify_the_code_run_code_task_to_use_modules"><a class="anchor" href="#modify_the_code_run_code_task_to_use_modules"></a>Modify the <code>run</code> task to use modules</h3>
 <div class="paragraph">
 <p>To get the <code>run</code> task working with your new Java 9 modules, add the following
-to the <code>build.gadle</code> file in the <code>fairy</code> project.</p>
+to the <code>build.gradle</code> file in the <code>fairy</code> project.</p>
 </div>
 <div class="listingblock">
 <div class="title">fairy/build.gradle</div>
@@ -1030,7 +1024,7 @@ run {
 </div>
 </div>
 <div class="sect2">
-<h3 id="change_2_modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"><a class="anchor" href="#change_2_modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"></a>Change 2 - Modify the <code>startScript</code> task for both *nix and Windows to use modules</h3>
+<h3 id="modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"><a class="anchor" href="#modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"></a>Modify the <code>startScript</code> task for both *nix and Windows to use modules</h3>
 <div class="paragraph">
 <p>The tar and zip files created in the <code>fairy/build/distributions</code> directory
 contain <a href="https://docs.gradle.org/4.1-milestone-1/userguide/application_plugin.html#sec:the_distribution">start scripts</a>
@@ -1077,12 +1071,12 @@ later replaced in a platform-specific way for the *nix shell script and Windows
 </div>
 </div>
 <div class="sect2">
-<h3 id="change_3_update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"><a class="anchor" href="#change_3_update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"></a>Change 3 - Update the <code>ServiceLoader</code> mechanism to the Java 9 syntax</h3>
+<h3 id="update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"><a class="anchor" href="#update_the_code_serviceloader_code_mechanism_to_the_java_9_syntax"></a>Update the <code>ServiceLoader</code> mechanism to the Java 9 syntax</h3>
 <div class="paragraph">
 <p>The Java 9 module system introduces a better way to specify which modules
 provide implementations of a service for the <code>ServiceLoader</code> mechanism.
 First, delete the <code>resources</code> directories from both <code>bears/src/main</code> and
-<code>pigs/src/main</code> as the new mechanism doesn&#8217;t require the <code>META-INF/services</code>
+<code>pigs/src/main</code>, since the new mechanism doesn&#8217;t require the <code>META-INF/services</code>
 files.</p>
 </div>
 <div class="paragraph">
@@ -1118,9 +1112,9 @@ files.</p>
 </div>
 <div class="paragraph">
 <p>Since the <code>fairy</code> project&#8217;s <code>module-info.java</code> declares that it
-<code>uses org.gradle.fairy.tale.Tale;</code>, the <code>ServiceLoader</code> instance will
+<code>uses org.gradle.fairy.tale.Tale</code>, the <code>ServiceLoader</code> instance will
 have access to any implementations provided at runtime by Java 9 modules
-which declare <code>provides org.gradle.fairy.tale.Tale</code>.</p>
+that declare <code>provides org.gradle.fairy.tale.Tale</code>.</p>
 </div>
 </div>
 </div>
@@ -1130,14 +1124,12 @@ which declare <code>provides org.gradle.fairy.tale.Tale</code>.</p>
 <div class="sectionbody">
 <div class="paragraph">
 <p>While Gradle does not yet support building Java 9 modules as a first-class
-feature of the java plugins, we are providing a plugin you can use to experiment
-with Java 9 modules on your projects while we&#8217;re still building the first-class
-implementation.</p>
+feature of the Java plugins, an experimental plugin is available to allow you to experiment with Java 9 modules on your projects.</p>
 </div>
 <div class="paragraph">
 <p>The <code>org.gradle.java.experimental-jigsaw</code> plugin is simply a convenient
 mechanism for applying all of the changes in steps 1 through 3 of this guide
-in one shot. It <strong>may</strong> work for your project, but, you should definitely
+in one step. It <strong>may</strong> work for your project, but you should definitely
 consider it experimental and not fit for production builds.</p>
 </div>
 <div class="paragraph">
@@ -1180,7 +1172,7 @@ consider it experimental and not fit for production builds.</p>
 <h2 id="summary"><a class="anchor" href="#summary"></a>Summary</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>At this point, your application is taking advantage of all most all the
+<p>At this point, your application is taking advantage of most of the
 features of the Java 9 module system. This guide has shown you how to modify
 the tasks added by the regular <code>java-library</code> and <code>application</code> plugins to get
 them work on with Java 9 modules. In the future, the Gradle team will be adding
@@ -1192,7 +1184,7 @@ today!</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-06-26 16:10:25 UTC
+Last updated 2017-06-30 13:45:51 UTC
 </div>
 </div>
 </body>
