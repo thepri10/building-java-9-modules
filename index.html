@@ -272,14 +272,14 @@ of the problems with how modularity wasn&#8217;t enforced in Java versions prior
             .class.getClassLoader()
             .loadClass(<span class="string"><span class="delimiter">&quot;</span><span class="content">org.gradle.actors.impl.DefaultActor</span><span class="delimiter">&quot;</span></span>);
         Actor actor = (Actor) clazz.getConstructor(<span class="predefined-type">String</span>.class)
-            .newInstance(<span class="string"><span class="delimiter">&quot;</span><span class="content">Elliot Ness</span><span class="delimiter">&quot;</span></span>);
-        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Elliot Ness</span><span class="delimiter">&quot;</span></span>, actor.toString());
+            .newInstance(<span class="string"><span class="delimiter">&quot;</span><span class="content">Kevin Costner</span><span class="delimiter">&quot;</span></span>);
+        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Kevin Costner</span><span class="delimiter">&quot;</span></span>, actor.toString());
     }
 
     <span class="annotation">@Test</span>
     <span class="directive">public</span> <span class="type">void</span> canReachDefaultActor() {
-        Actor actor = <span class="keyword">new</span> org.gradle.actors.impl.DefaultActor(<span class="string"><span class="delimiter">&quot;</span><span class="content">Elliot Ness</span><span class="delimiter">&quot;</span></span>);
-        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Elliot Ness</span><span class="delimiter">&quot;</span></span>, actor.toString());
+        Actor actor = <span class="keyword">new</span> org.gradle.actors.impl.DefaultActor(<span class="string"><span class="delimiter">&quot;</span><span class="content">Kevin Costner</span><span class="delimiter">&quot;</span></span>);
+        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Kevin Costner</span><span class="delimiter">&quot;</span></span>, actor.toString());
     }
 
     <span class="comment">/*
@@ -1139,7 +1139,10 @@ consider it experimental and not fit for production builds.</p>
 <div class="listingblock">
 <div class="title">actors/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy"></code></pre>
+<pre class="CodeRay highlight"><code data-lang="groovy">plugins {
+    id <span class="string"><span class="delimiter">'</span><span class="content">java-library</span><span class="delimiter">'</span></span>
+    id <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.java.experimental-jigsaw</span><span class="delimiter">'</span></span> version <span class="string"><span class="delimiter">'</span><span class="content">0.1.1</span><span class="delimiter">'</span></span>  <i class="conum" data-value="1"></i><b>(1)</b>
+}</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1156,7 +1159,7 @@ consider it experimental and not fit for production builds.</p>
 <div class="listingblock">
 <div class="title">actors/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy"></code></pre>
+<pre class="CodeRay highlight"><code data-lang="groovy">javaModule.name = <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.actors</span><span class="delimiter">'</span></span>  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1185,7 +1188,7 @@ today!</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-07-04 19:19:47 UTC
+Last updated 2017-07-05 14:53:45 UTC
 </div>
 </div>
 </body>
