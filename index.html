@@ -1101,6 +1101,15 @@ files.</p>
 <p>Then, adjust the <code>module-info.java</code> files for each of those projects.</p>
 </div>
 <div class="listingblock">
+<div class="title">fairy/src/main/java/module-info.java</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.fairy.app {
+    requires org.gradle.fairy.tale;
+    uses org.gradle.fairy.tale.Tale;
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
 <div class="title">bears/src/main/java/module-info.java</div>
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="java">module org.gradle.fairy.tale.bears {
@@ -1212,7 +1221,7 @@ today!</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-09-29 19:13:50 +00:00
+Last updated 2017-09-29 20:51:08 +00:00
 </div>
 </div>
 </body>
