@@ -12,6 +12,7 @@
 <link rel="shortcut icon" href="https://guides.gradle.org/icon/favicon.ico">
 <script defer src="https://guides.gradle.org/js/guides.js"></script>
 <script defer src="https://guides.gradle.org/js/set-time-to-complete-text.js"></script>
+<script async src="https://guides.gradle.org/js/autotrack.js"></script>
 
 <meta charset="utf-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
@@ -75,7 +76,7 @@
                     <a target="_top" class="site-header__navigation-link" href="https://gradle.org/training/" itemprop="url">Training</a>
                 </li>
                 <li class="site-header__navigation-item" itemprop="name">
-                    <a target="_top" class="site-header__navigation-link" href="https://gradle.com/enterprise" itemprop="url">Enterprise</a>
+                    <a target="_top" class="site-header__navigation-link" href="https://gradle.com/enterprise" itemprop="url">Try Gradle Enterprise</a>
                 </li>
             </ul>
         </div>
@@ -115,7 +116,7 @@ need to change in your Java application to:</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>While Gradle version 4.5 doesn&#8217;t have first-class support for
+<p>While Gradle version 4.6 doesn&#8217;t have first-class support for
 Java 9 modules yet, this guide shows you how to experiment with them before that
 support is complete.</p>
 </div>
@@ -948,7 +949,7 @@ BUILD FAILED</pre>
 of the subprojects using Java 9 modules. The subprojects are appropriately
 encapsulated, and none of the tests from one package can see implementation
 details of any of their dependencies. However, there are a few features
-of Gradle&#8217;s <a href="https://docs.gradle.org/4.5/userguide/application_plugin.html">Application Plugin</a> which are
+of Gradle&#8217;s <a href="https://docs.gradle.org/4.6/userguide/application_plugin.html">Application Plugin</a> which are
 relying on the classpath instead of the module path to load and resolve classes.</p>
 </div>
 <div class="paragraph">
@@ -969,7 +970,7 @@ learn how to consume those modules when running the main class
 <div class="paragraph">
 <p>There are two ways run the app covered in this guide. The first is to use
 Gradle&#8217;s <code>run</code> task which is added by
-<a href="https://docs.gradle.org/4.5/userguide/application_plugin.html">the Application Plugin</a>.</p>
+<a href="https://docs.gradle.org/4.6/userguide/application_plugin.html">the Application Plugin</a>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1092,7 +1093,7 @@ run {
 <h3 id="modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"><a class="anchor" href="#modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"></a><a class="link" href="#modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules">Modify the <code>startScript</code> task for both *nix and Windows to use modules</a></h3>
 <div class="paragraph">
 <p>The tar and zip files created in the <code>fairy/build/distributions</code> directory
-contain <a href="https://docs.gradle.org/4.5/userguide/application_plugin.html#sec:the_distribution">start scripts</a>
+contain <a href="https://docs.gradle.org/4.6/userguide/application_plugin.html#sec:the_distribution">start scripts</a>
 which allow the JVM to be started in a predictable way on all supported
 operating systems.</p>
 </div>
