@@ -3,14 +3,14 @@
 <head><link crossorigin href="//assets.gradle.com" rel="preconnect">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,400i">
 <link rel="stylesheet" href="https://guides.gradle.org/css/asciidoctor.css">
-<link rel="stylesheet" href="https://guides.gradle.org/css/docs-blue-theme-4.5.2.css">
+<link rel="stylesheet" href="https://guides.gradle.org/css/docs-blue-theme-4.7.css">
 <link rel="apple-touch-icon" sizes="180x180" href="https://guides.gradle.org/icon/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="https://guides.gradle.org/icon/favicon-32x32.png" sizes="32x32">
 <link rel="icon" type="image/png" href="https://guides.gradle.org/icon/favicon-16x16.png" sizes="16x16">
 <link rel="manifest" href="https://guides.gradle.org/icon/manifest.json">
 <link rel="mask-icon" href="https://guides.gradle.org/icon/safari-pinned-tab.svg" color="#5bbad5">
 <link rel="shortcut icon" href="https://guides.gradle.org/icon/favicon.ico">
-<script defer src="https://guides.gradle.org/js/guides.js"></script>
+<script defer src="https://guides.gradle.org/js/guides-4.7.js"></script>
 <script defer src="https://guides.gradle.org/js/set-time-to-complete-text.js"></script>
 <script async src="https://guides.gradle.org/js/autotrack.js"></script>
 
@@ -21,7 +21,6 @@
 <meta name="author" content="Pepper Lebeck-Jobe">
 <title>Building Java 9 Modules</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
-<link rel="stylesheet" href="./coderay-asciidoctor.css">
 </head>
 <body class="article">
 <header class="site-layout__header site-header" itemscope="itemscope" itemtype="https://schema.org/WPHeader">
@@ -116,7 +115,7 @@ need to change in your Java application to:</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>While Gradle version 4.6 doesn&#8217;t have first-class support for
+<p>While Gradle version 4.7 doesn&#8217;t have first-class support for
 Java 9 modules yet, this guide shows you how to experiment with them before that
 support is complete.</p>
 </div>
@@ -246,12 +245,12 @@ topic is a bit lengthy, but here&#8217;s how it is used in our sample applicatio
 <div class="listingblock">
 <div class="title">fairy/src/main/java/org/gradle/fairy/app/StoryTeller.java</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">    <span class="directive">public</span> <span class="directive">static</span> <span class="type">void</span> main(<span class="predefined-type">String</span><span class="type">[]</span> args) {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">    public static void main(String[] args) {
         ServiceLoader&lt;Tale&gt; loader = ServiceLoader.load(Tale.class);
-        <span class="keyword">if</span> (!loader.iterator().hasNext()) {
-            <span class="predefined-type">System</span>.out.println(<span class="string"><span class="delimiter">&quot;</span><span class="content">Alas, I have no tales to tell!</span><span class="delimiter">&quot;</span></span>);
+        if (!loader.iterator().hasNext()) {
+            System.out.println("Alas, I have no tales to tell!");
         }
-        <span class="keyword">for</span> (Tale tale : loader) {
+        for (Tale tale : loader) {
             tale.tell();
         }
     }</code></pre>
@@ -265,13 +264,13 @@ the <code>Tale</code> class which have been specified in special files named
 <div class="listingblock">
 <div class="title">bears/src/main/resources/META-INF/services/org.gradle.fairy.tale.Tale</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">org.gradle.fairy.tale.bears.GoldilocksAndTheThreeBears</code></pre>
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">org.gradle.fairy.tale.bears.GoldilocksAndTheThreeBears</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">pigs/src/main/resources/META-INF/services/org.gradle.fairy.tale.Tale</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">org.gradle.fairy.tale.pigs.ThreeLittlePigs</code></pre>
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">org.gradle.fairy.tale.pigs.ThreeLittlePigs</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -283,11 +282,11 @@ application.</p>
 <div class="listingblock">
 <div class="title">fairy/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">dependencies {
-    implementation project(<span class="string"><span class="delimiter">'</span><span class="content">:tale</span><span class="delimiter">'</span></span>)
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">dependencies {
+    implementation project(':tale')
 
-    runtimeOnly project(<span class="string"><span class="delimiter">'</span><span class="content">:pigs</span><span class="delimiter">'</span></span>)
-    runtimeOnly project(<span class="string"><span class="delimiter">'</span><span class="content">:bears</span><span class="delimiter">'</span></span>)
+    runtimeOnly project(':pigs')
+    runtimeOnly project(':bears')
 }</code></pre>
 </div>
 </div>
@@ -315,38 +314,38 @@ of the problems with how modularity wasn&#8217;t enforced in Java versions prior
 <div class="listingblock">
 <div class="title">formula/src/test/java/org/gradle/fairy/tale/formula/ModularityTest.java</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">    <span class="annotation">@Test</span>
-    <span class="directive">public</span> <span class="type">void</span> canReachActor() {
-        Actor actor = Imagination.createActor(<span class="string"><span class="delimiter">&quot;</span><span class="content">Sean Connery</span><span class="delimiter">&quot;</span></span>);
-        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Sean Connery</span><span class="delimiter">&quot;</span></span>, actor.toString());
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">    @Test
+    public void canReachActor() {
+        Actor actor = Imagination.createActor("Sean Connery");
+        assertEquals("Sean Connery", actor.toString());
     }
 
-    <span class="annotation">@Test</span>
-    <span class="directive">public</span> <span class="type">void</span> canDynamicallyReachDefaultActor() <span class="directive">throws</span> <span class="exception">Exception</span> {
-        <span class="predefined-type">Class</span> clazz = ModularityTest
+    @Test
+    public void canDynamicallyReachDefaultActor() throws Exception {
+        Class clazz = ModularityTest
             .class.getClassLoader()
-            .loadClass(<span class="string"><span class="delimiter">&quot;</span><span class="content">org.gradle.actors.impl.DefaultActor</span><span class="delimiter">&quot;</span></span>);
-        Actor actor = (Actor) clazz.getConstructor(<span class="predefined-type">String</span>.class)
-            .newInstance(<span class="string"><span class="delimiter">&quot;</span><span class="content">Kevin Costner</span><span class="delimiter">&quot;</span></span>);
-        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Kevin Costner</span><span class="delimiter">&quot;</span></span>, actor.toString());
+            .loadClass("org.gradle.actors.impl.DefaultActor");
+        Actor actor = (Actor) clazz.getConstructor(String.class)
+            .newInstance("Kevin Costner");
+        assertEquals("Kevin Costner", actor.toString());
     }
 
-    <span class="annotation">@Test</span>
-    <span class="directive">public</span> <span class="type">void</span> canReachDefaultActor() {
-        Actor actor = <span class="keyword">new</span> org.gradle.actors.impl.DefaultActor(<span class="string"><span class="delimiter">&quot;</span><span class="content">Kevin Costner</span><span class="delimiter">&quot;</span></span>);
-        assertEquals(<span class="string"><span class="delimiter">&quot;</span><span class="content">Kevin Costner</span><span class="delimiter">&quot;</span></span>, actor.toString());
+    @Test
+    public void canReachDefaultActor() {
+        Actor actor = new org.gradle.actors.impl.DefaultActor("Kevin Costner");
+        assertEquals("Kevin Costner", actor.toString());
     }
 
-    <span class="comment">/*
+    /*
     @Test
     public void canReachGuavaClasses() {
-        // This line would throw a compiler error because gradle has kept the implementation dependency &quot;guava&quot;
+        // This line would throw a compiler error because gradle has kept the implementation dependency "guava"
         // from leaking into the formula project.
-        Set&lt;String&gt; strings = com.google.common.collect.ImmutableSet.of(&quot;Hello&quot;, &quot;Goodbye&quot;);
-        assertTrue(strings.contains(&quot;Hello&quot;));
-        assertTrue(strings.contains(&quot;Goodbye&quot;));
+        Set&lt;String&gt; strings = com.google.common.collect.ImmutableSet.of("Hello", "Goodbye");
+        assertTrue(strings.contains("Hello"));
+        assertTrue(strings.contains("Goodbye"));
     }
-    */</span></code></pre>
+    */</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -509,7 +508,7 @@ As a reminder, all builds from this point on need to run on Java 9.
 <div class="listingblock">
 <div class="title">actors/src/main/java/module-info.java</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.actors {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">module org.gradle.actors {
     exports org.gradle.actors;
     requires guava;
 }</code></pre>
@@ -535,13 +534,13 @@ you require <code>guava</code>.</p>
 <div class="listingblock">
 <div class="title">actors/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">ext.moduleName = <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.actors</span><span class="delimiter">'</span></span> <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">ext.moduleName = 'org.gradle.actors' <i class="conum" data-value="1"></i><b>(1)</b>
 
 compileJava {
-    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
+    inputs.property("moduleName", moduleName)
     doFirst {
         options.compilerArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
+            '--module-path', classpath.asPath,
         ]
         classpath = files()  <i class="conum" data-value="2"></i><b>(2)</b>
     }
@@ -608,14 +607,14 @@ patching of the <code>org.gradle.actors</code> module.</p>
 <div class="listingblock">
 <div class="title">actors/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">compileTestJava {
-    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">compileTestJava {
+    inputs.property("moduleName", moduleName)
     doFirst {
         options.compilerArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath, <i class="conum" data-value="1"></i><b>(1)</b>
-            <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">junit</span><span class="delimiter">'</span></span>,  <i class="conum" data-value="2"></i><b>(2)</b>
-            <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>, <i class="conum" data-value="3"></i><b>(3)</b>
-            <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.srcDirs).asPath, <i class="conum" data-value="4"></i><b>(4)</b>
+            '--module-path', classpath.asPath, <i class="conum" data-value="1"></i><b>(1)</b>
+            '--add-modules', 'junit',  <i class="conum" data-value="2"></i><b>(2)</b>
+            '--add-reads', "$moduleName=junit", <i class="conum" data-value="3"></i><b>(3)</b>
+            '--patch-module', "$moduleName=" + files(sourceSets.test.java.srcDirs).asPath, <i class="conum" data-value="4"></i><b>(4)</b>
         ]
         classpath = files()
     }
@@ -663,14 +662,14 @@ to include the test classes.</p>
 <div class="listingblock">
 <div class="title">actors/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">test {
-    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">test {
+    inputs.property("moduleName", moduleName)
     doFirst {
         jvmArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath, <i class="conum" data-value="1"></i><b>(1)</b>
-            <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">ALL-MODULE-PATH</span><span class="delimiter">'</span></span>, <i class="conum" data-value="2"></i><b>(2)</b>
-            <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>, <i class="conum" data-value="3"></i><b>(3)</b>
-            <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.outputDir).asPath, <i class="conum" data-value="4"></i><b>(4)</b>
+            '--module-path', classpath.asPath, <i class="conum" data-value="1"></i><b>(1)</b>
+            '--add-modules', 'ALL-MODULE-PATH', <i class="conum" data-value="2"></i><b>(2)</b>
+            '--add-reads', "$moduleName=junit", <i class="conum" data-value="3"></i><b>(3)</b>
+            '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir).asPath, <i class="conum" data-value="4"></i><b>(4)</b>
         ]
         classpath = files()
     }
@@ -741,7 +740,7 @@ variable. For example:</p>
 <div class="listingblock">
 <div class="title">fairy/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">ext.moduleName = <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.fairy.app</span><span class="delimiter">'</span></span></code></pre>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">ext.moduleName = 'org.gradle.fairy.app'</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -751,10 +750,10 @@ tell the <code>jar</code> task to include the manifest attribute.</p>
 <div class="listingblock">
 <div class="title">build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">        jar {
-            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">        jar {
+            inputs.property("moduleName", moduleName)
             manifest {
-                attributes(<span class="string"><span class="delimiter">'</span><span class="content">Automatic-Module-Name</span><span class="delimiter">'</span></span>: moduleName)
+                attributes('Automatic-Module-Name': moduleName)
             }
         }</code></pre>
 </div>
@@ -808,43 +807,43 @@ file.</p>
 <div class="listingblock">
 <div class="title">build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">subprojects {
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">subprojects {
     afterEvaluate {
         repositories {
             jcenter()
         }
 
         compileJava {
-            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
+            inputs.property("moduleName", moduleName)
             doFirst {
                 options.compilerArgs = [
-                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
+                    '--module-path', classpath.asPath,
                 ]
                 classpath = files()
             }
         }
 
         compileTestJava {
-            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
+            inputs.property("moduleName", moduleName)
             doFirst {
                 options.compilerArgs = [
-                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-                    <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">junit</span><span class="delimiter">'</span></span>,
-                    <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>,
-                    <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.srcDirs).asPath,
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'junit',
+                    '--add-reads', "$moduleName=junit",
+                    '--patch-module', "$moduleName=" + files(sourceSets.test.java.srcDirs).asPath,
                 ]
                 classpath = files()
             }
         }
 
         test {
-            inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
+            inputs.property("moduleName", moduleName)
             doFirst {
                 jvmArgs = [
-                    <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-                    <span class="string"><span class="delimiter">'</span><span class="content">--add-modules</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">ALL-MODULE-PATH</span><span class="delimiter">'</span></span>,
-                    <span class="string"><span class="delimiter">'</span><span class="content">--add-reads</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=junit</span><span class="delimiter">&quot;</span></span>,
-                    <span class="string"><span class="delimiter">'</span><span class="content">--patch-module</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">=</span><span class="delimiter">&quot;</span></span> + files(sourceSets.test.java.outputDir).asPath,
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'ALL-MODULE-PATH',
+                    '--add-reads', "$moduleName=junit",
+                    '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir).asPath,
                 ]
                 classpath = files()
             }
@@ -874,7 +873,7 @@ subprojects, you should do that now. For example:</p>
 <div class="listingblock">
 <div class="title">pigs/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">ext.moduleName = <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.fairy.tale.pigs</span><span class="delimiter">'</span></span></code></pre>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">ext.moduleName = 'org.gradle.fairy.tale.pigs'</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -884,7 +883,7 @@ For example:</p>
 <div class="listingblock">
 <div class="title">bears/src/main/java/module-info.java</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.fairy.tale.bears {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">module org.gradle.fairy.tale.bears {
     requires org.gradle.actors;
     requires transitive org.gradle.fairy.tale;
     requires org.gradle.fairy.tale.formula;
@@ -949,7 +948,7 @@ BUILD FAILED</pre>
 of the subprojects using Java 9 modules. The subprojects are appropriately
 encapsulated, and none of the tests from one package can see implementation
 details of any of their dependencies. However, there are a few features
-of Gradle&#8217;s <a href="https://docs.gradle.org/4.6/userguide/application_plugin.html">Application Plugin</a> which are
+of Gradle&#8217;s <a href="https://docs.gradle.org/4.7/userguide/application_plugin.html">Application Plugin</a> which are
 relying on the classpath instead of the module path to load and resolve classes.</p>
 </div>
 <div class="paragraph">
@@ -970,7 +969,7 @@ learn how to consume those modules when running the main class
 <div class="paragraph">
 <p>There are two ways run the app covered in this guide. The first is to use
 Gradle&#8217;s <code>run</code> task which is added by
-<a href="https://docs.gradle.org/4.6/userguide/application_plugin.html">the Application Plugin</a>.</p>
+<a href="https://docs.gradle.org/4.7/userguide/application_plugin.html">the Application Plugin</a>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1062,14 +1061,14 @@ to the <code>build.gradle</code> file in the <code>fairy</code> project.</p>
 <div class="listingblock">
 <div class="title">fairy/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">mainClassName = <span class="string"><span class="delimiter">&quot;</span><span class="inline"><span class="inline-delimiter">$</span>moduleName</span><span class="content">/org.gradle.fairy.app.StoryTeller</span><span class="delimiter">&quot;</span></span> <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">mainClassName = "$moduleName/org.gradle.fairy.app.StoryTeller" <i class="conum" data-value="1"></i><b>(1)</b>
 
 run {
-    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
+    inputs.property("moduleName", moduleName)
     doFirst {
         jvmArgs = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, classpath.asPath,
-            <span class="string"><span class="delimiter">'</span><span class="content">--module</span><span class="delimiter">'</span></span>, mainClassName <i class="conum" data-value="2"></i><b>(2)</b>
+            '--module-path', classpath.asPath,
+            '--module', mainClassName <i class="conum" data-value="2"></i><b>(2)</b>
         ]
         classpath = files()
     }
@@ -1093,7 +1092,7 @@ run {
 <h3 id="modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"><a class="anchor" href="#modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"></a><a class="link" href="#modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules">Modify the <code>startScript</code> task for both *nix and Windows to use modules</a></h3>
 <div class="paragraph">
 <p>The tar and zip files created in the <code>fairy/build/distributions</code> directory
-contain <a href="https://docs.gradle.org/4.6/userguide/application_plugin.html#sec:the_distribution">start scripts</a>
+contain <a href="https://docs.gradle.org/4.7/userguide/application_plugin.html#sec:the_distribution">start scripts</a>
 which allow the JVM to be started in a predictable way on all supported
 operating systems.</p>
 </div>
@@ -1104,23 +1103,23 @@ operating systems.</p>
 <div class="listingblock">
 <div class="title">fairy/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">startScripts {
-    inputs.property(<span class="string"><span class="delimiter">&quot;</span><span class="content">moduleName</span><span class="delimiter">&quot;</span></span>, moduleName)
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">startScripts {
+    inputs.property("moduleName", moduleName)
     doFirst {
         classpath = files()
         defaultJvmOpts = [
-            <span class="string"><span class="delimiter">'</span><span class="content">--module-path</span><span class="delimiter">'</span></span>, <span class="string"><span class="delimiter">'</span><span class="content">APP_HOME_LIBS</span><span class="delimiter">'</span></span>,  <i class="conum" data-value="1"></i><b>(1)</b>
-            <span class="string"><span class="delimiter">'</span><span class="content">--module</span><span class="delimiter">'</span></span>, mainClassName
+            '--module-path', 'APP_HOME_LIBS',  <i class="conum" data-value="1"></i><b>(1)</b>
+            '--module', mainClassName
         ]
     }
     doLast{
-        <span class="keyword">def</span> bashFile = <span class="keyword">new</span> <span class="predefined-type">File</span>(outputDir, applicationName)
-        <span class="predefined-type">String</span> bashContent = bashFile.text
-        bashFile.text = bashContent.replaceFirst(<span class="string"><span class="delimiter">'</span><span class="content">APP_HOME_LIBS</span><span class="delimiter">'</span></span>, <span class="predefined-type">Matcher</span>.quoteReplacement(<span class="string"><span class="delimiter">'</span><span class="content">$APP_HOME/lib</span><span class="delimiter">'</span></span>))
+        def bashFile = new File(outputDir, applicationName)
+        String bashContent = bashFile.text
+        bashFile.text = bashContent.replaceFirst('APP_HOME_LIBS', Matcher.quoteReplacement('$APP_HOME/lib'))
 
-        <span class="keyword">def</span> batFile = <span class="keyword">new</span> <span class="predefined-type">File</span>(outputDir, applicationName + <span class="string"><span class="delimiter">&quot;</span><span class="content">.bat</span><span class="delimiter">&quot;</span></span>)
-        <span class="predefined-type">String</span> batContent = batFile.text
-        batFile.text = batContent.replaceFirst(<span class="string"><span class="delimiter">'</span><span class="content">APP_HOME_LIBS</span><span class="delimiter">'</span></span>, <span class="predefined-type">Matcher</span>.quoteReplacement(<span class="string"><span class="delimiter">'</span><span class="content">%APP_HOME%</span><span class="char">\\</span><span class="content">lib</span><span class="delimiter">'</span></span>))
+        def batFile = new File(outputDir, applicationName + ".bat")
+        String batContent = batFile.text
+        batFile.text = batContent.replaceFirst('APP_HOME_LIBS', Matcher.quoteReplacement('%APP_HOME%\\lib'))
     }
 }</code></pre>
 </div>
@@ -1151,7 +1150,7 @@ files.</p>
 <div class="listingblock">
 <div class="title">fairy/src/main/java/module-info.java</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.fairy.app {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">module org.gradle.fairy.app {
     requires org.gradle.fairy.tale;
     uses org.gradle.fairy.tale.Tale;
 }</code></pre>
@@ -1160,7 +1159,7 @@ files.</p>
 <div class="listingblock">
 <div class="title">bears/src/main/java/module-info.java</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.fairy.tale.bears {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">module org.gradle.fairy.tale.bears {
     requires org.gradle.actors;
     requires transitive org.gradle.fairy.tale;
     requires org.gradle.fairy.tale.formula;
@@ -1173,7 +1172,7 @@ files.</p>
 <div class="listingblock">
 <div class="title">pigs/src/main/java/module-info.java</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="java">module org.gradle.fairy.tale.pigs {
+<pre class="prettyprint highlight"><code class="language-java" data-lang="java">module org.gradle.fairy.tale.pigs {
     requires org.gradle.actors;
     requires transitive org.gradle.fairy.tale;
     requires org.gradle.fairy.tale.formula;
@@ -1212,9 +1211,9 @@ consider it experimental and not fit for production builds.</p>
 <div class="listingblock">
 <div class="title">actors/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">plugins {
-    id <span class="string"><span class="delimiter">'</span><span class="content">java-library</span><span class="delimiter">'</span></span>
-    id <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.java.experimental-jigsaw</span><span class="delimiter">'</span></span> version <span class="string"><span class="delimiter">'</span><span class="content">0.1.1</span><span class="delimiter">'</span></span>  <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">plugins {
+    id 'java-library'
+    id 'org.gradle.java.experimental-jigsaw' version '0.1.1'  <i class="conum" data-value="1"></i><b>(1)</b>
 }</code></pre>
 </div>
 </div>
@@ -1232,7 +1231,7 @@ consider it experimental and not fit for production builds.</p>
 <div class="listingblock">
 <div class="title">actors/build.gradle</div>
 <div class="content">
-<pre class="CodeRay highlight"><code data-lang="groovy">javaModule.name = <span class="string"><span class="delimiter">'</span><span class="content">org.gradle.actors</span><span class="delimiter">'</span></span>  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+<pre class="prettyprint highlight"><code class="language-groovy" data-lang="groovy">javaModule.name = 'org.gradle.actors'  <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1267,6 +1266,9 @@ today!</p>
 </div>
 </div>
 </div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.js"></script>
+<script>prettyPrint()</script>
 <footer class="site-layout__footer site-footer" itemscope="itemscope" itemtype="https://schema.org/WPFooter">
     <nav class="site-footer__navigation" itemtype="https://schema.org/SiteNavigationElement">
         <section class="site-footer__links">
