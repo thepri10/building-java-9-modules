@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.6.1">
+<meta name="generator" content="Asciidoctor 1.5.5">
 <title>Building Java 9 Modules</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+
 <link crossorigin href="//assets.gradle.com" rel="preconnect">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,400i">
-<link rel="stylesheet" href="https://guides.gradle.org/css/asciidoctor.css">
-<link rel="stylesheet" href="https://guides.gradle.org/css/docs-blue-theme-4.8.1.css">
+<link href="https://fonts.googleapis.com/css?family=Inconsolata:400,700" rel="stylesheet">
+<link rel="stylesheet" href="https://guides.gradle.org/css/docs-blue-theme-4.10.css">
 <link rel="apple-touch-icon" sizes="180x180" href="https://guides.gradle.org/icon/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="https://guides.gradle.org/icon/favicon-32x32.png" sizes="32x32">
 <link rel="icon" type="image/png" href="https://guides.gradle.org/icon/favicon-16x16.png" sizes="16x16">
 <link rel="manifest" href="https://guides.gradle.org/icon/manifest.json">
 <link rel="shortcut icon" href="https://guides.gradle.org/icon/favicon.ico">
-<script defer src="https://guides.gradle.org/js/guides-4.8.js"></script>
+<script defer src="https://guides.gradle.org/js/guides-4.10.js"></script>
 <script defer src="https://guides.gradle.org/js/set-time-to-complete-text.js"></script>
 <script async src="https://guides.gradle.org/js/autotrack.js"></script>
 
@@ -167,6 +167,19 @@
     <div class="chapter">
 <div id="header">
 <h1>Building Java 9 Modules</h1>
+<div id="toc" class="toc">
+<div id="toctitle">Contents</div>
+<ul class="sectlevel1">
+<li><a href="#what_you_ll_need">What you&#8217;ll need</a></li>
+<li><a href="#understanding_the_example_project">Understanding the Example Project</a></li>
+<li><a href="#step_1_produce_a_java_9_module_for_a_single_subproject">Step 1 - Produce a Java 9 module for a single subproject</a></li>
+<li><a href="#step_2_produce_java_9_modules_for_all_subprojects">Step 2 - Produce Java 9 modules for all subprojects</a></li>
+<li><a href="#step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks">Step 3 - Consume Java 9 modules in the <code>run</code> and <code>assemble</code> tasks</a></li>
+<li><a href="#step_4_use_the_code_experimental_jigsaw_code_plugin_to_do_the_same_thing">Step 4 - Use the <code>experimental-jigsaw</code> plugin to do the same thing</a></li>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#help_improve_this_guide">Help improve this guide</a></li>
+</ul>
+</div>
 </div>
 <div id="content">
 <div id="preamble">
@@ -196,7 +209,7 @@ need to change in your Java application to:</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>While Gradle version 4.7 doesn&#8217;t have first-class support for
+<p>While Gradle version 4.10-rc-2 doesn&#8217;t have first-class support for
 Java 9 modules yet, this guide shows you how to experiment with them before that
 support is complete.</p>
 </div>
@@ -213,19 +226,6 @@ Eclipse Oxygen.3a Release (4.7.3a), due to classpath/modulepath <a href="https:/
 </tr>
 </table>
 </div>
-</div>
-<div id="toc" class="toc">
-<div id="toctitle">Contents</div>
-<ul class="sectlevel1">
-<li><a href="#what_you_ll_need">What you&#8217;ll need</a></li>
-<li><a href="#understanding_the_example_project">Understanding the Example Project</a></li>
-<li><a href="#step_1_produce_a_java_9_module_for_a_single_subproject">Step 1 - Produce a Java 9 module for a single subproject</a></li>
-<li><a href="#step_2_produce_java_9_modules_for_all_subprojects">Step 2 - Produce Java 9 modules for all subprojects</a></li>
-<li><a href="#step_3_consume_java_9_modules_in_the_code_run_code_and_code_assemble_code_tasks">Step 3 - Consume Java 9 modules in the <code>run</code> and <code>assemble</code> tasks</a></li>
-<li><a href="#step_4_use_the_code_experimental_jigsaw_code_plugin_to_do_the_same_thing">Step 4 - Use the <code>experimental-jigsaw</code> plugin to do the same thing</a></li>
-<li><a href="#summary">Summary</a></li>
-<li><a href="#help_improve_this_guide">Help improve this guide</a></li>
-</ul>
 </div>
 </div>
 <div class="sect1">
@@ -1042,7 +1042,7 @@ BUILD FAILED</pre>
 of the subprojects using Java 9 modules. The subprojects are appropriately
 encapsulated, and none of the tests from one package can see implementation
 details of any of their dependencies. However, there are a few features
-of Gradle&#8217;s <a href="https://docs.gradle.org/4.7/userguide/application_plugin.html">Application Plugin</a> which are
+of Gradle&#8217;s <a href="https://docs.gradle.org/4.10-rc-2/userguide/application_plugin.html">Application Plugin</a> which are
 relying on the classpath instead of the module path to load and resolve classes.</p>
 </div>
 <div class="paragraph">
@@ -1063,7 +1063,7 @@ learn how to consume those modules when running the main class
 <div class="paragraph">
 <p>There are two ways run the app covered in this guide. The first is to use
 Gradle&#8217;s <code>run</code> task which is added by
-<a href="https://docs.gradle.org/4.7/userguide/application_plugin.html">the Application Plugin</a>.</p>
+<a href="https://docs.gradle.org/4.10-rc-2/userguide/application_plugin.html">the Application Plugin</a>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1186,7 +1186,7 @@ run {
 <h3 id="modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"><a class="anchor" href="#modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules"></a><a class="link" href="#modify_the_code_startscript_code_task_for_both_nix_and_windows_to_use_modules">Modify the <code>startScript</code> task for both *nix and Windows to use modules</a></h3>
 <div class="paragraph">
 <p>The tar and zip files created in the <code>fairy/build/distributions</code> directory
-contain <a href="https://docs.gradle.org/4.7/userguide/application_plugin.html#sec:the_distribution">start scripts</a>
+contain <a href="https://docs.gradle.org/4.10-rc-2/userguide/application_plugin.html#sec:the_distribution">start scripts</a>
 which allow the JVM to be started in a predictable way on all supported
 operating systems.</p>
 </div>
